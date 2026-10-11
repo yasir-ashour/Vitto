@@ -1,1 +1,1933 @@
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>متجر فيتو - Vitto Store</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter / Cairo for Arabic -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vitto: {
+                            50: '#fff5f0',
+                            100: '#ffe8db',
+                            500: '#ff5000', // Brand Primary Orange
+                            600: '#e04600',
+                            700: '#b83800',
+                            dark: '#1e2022'
+                        }
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: #f4f5f7;
+            color: #2d3748;
+            user-select: none;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff5000;
+            border-radius: 4px;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Smooth tab animation */
+        .page-view {
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+        /* Glassmorphism effects */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+        }
+        /* Pulse dot for status */
+        .pulse-dot {
+            box-shadow: 0 0 0 0 rgba(255, 80, 0, 0.7);
+            animation: pulse 1.6s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 80, 0, 0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(255, 80, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 80, 0, 0); }
+        }
+    </style>
+</head>
+<body class="pb-20 md:pb-0 bg-slate-50 min-h-screen">
 
+    <!-- Loading Screen -->
+    <div id="app-loader" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="relative flex items-center justify-center">
+            <div class="w-24 h-24 border-4 border-orange-100 border-t-vitto-500 rounded-full animate-spin"></div>
+            <div class="absolute font-black text-2xl text-vitto-500 tracking-wider">vitto</div>
+        </div>
+        <p class="mt-4 text-gray-500 text-sm font-medium animate-pulse">جاري تحميل المتجر...</p>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast-msg" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold flex items-center space-x-2 space-x-reverse opacity-0 pointer-events-none transition-all duration-300 transform -translate-y-4">
+        <i class="fas me-2 text-vitto-500" id="toast-icon"></i>
+        <span id="toast-text">تمت العملية بنجاح</span>
+    </div>
+
+    <!-- Application Main Wrapper -->
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-xl relative overflow-hidden flex flex-col">
+
+        <!-- Top Header Bar (Global Dynamic) -->
+        <header id="main-header" class="sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <button id="header-back-btn" onclick="goBack()" class="hidden text-gray-700 hover:text-vitto-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                    <i class="fas fa-arrow-right text-lg"></i>
+                </button>
+                <div id="header-brand" class="flex items-center space-x-1 space-x-reverse cursor-pointer" onclick="switchTab('home')">
+                    <span class="text-2xl font-black tracking-tight text-vitto-500">vitto</span>
+                    <span class="bg-vitto-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">Store</span>
+                </div>
+            </div>
+
+            <!-- Dynamic Header Title / Search -->
+            <div id="header-center" class="flex-1 px-3">
+                <div id="header-search-box" class="relative">
+                    <input type="text" id="global-search-input" onkeyup="handleSearch(this.value)" placeholder="ابحث عن منتج، ماركة، أو قسم..." class="w-full bg-gray-100 text-xs py-2 pr-9 pl-3 rounded-full border border-transparent focus:border-vitto-500 focus:bg-white focus:outline-none transition-all">
+                    <i class="fas fa-search absolute right-3 top-2.5 text-gray-400 text-xs"></i>
+                </div>
+                <h1 id="header-title" class="hidden text-center text-base font-bold text-gray-800"></h1>
+            </div>
+
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <button onclick="switchTab('cart')" class="relative p-2 text-gray-600 hover:text-vitto-500 rounded-full">
+                    <i class="fas fa-shopping-bag text-xl"></i>
+                    <span id="header-cart-badge" class="absolute top-1 right-1 bg-vitto-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold border-2 border-white">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Scrollable Content Area -->
+        <main class="flex-1 overflow-y-auto pb-20">
+
+            <!-- 1. HOME TAB PAGE VIEW -->
+            <section id="page-home" class="page-view p-4 space-y-5">
+                <!-- Promo Banner Carousel -->
+                <div class="relative rounded-2xl overflow-hidden shadow-md bg-gradient-to-r from-orange-500 to-amber-500 text-white p-5 flex justify-between items-center">
+                    <div class="space-y-2 z-10 max-w-[65%]">
+                        <span class="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-bold">عروض الموسم 💥</span>
+                        <h2 class="text-xl font-extrabold leading-snug">خصومات تصل حتى 50% على الإلكترونيات!</h2>
+                        <p class="text-xs text-orange-100">توصيل سريع لجميع المناطق</p>
+                        <button onclick="switchTab('categories')" class="mt-2 bg-white text-vitto-500 text-xs font-extrabold px-4 py-2 rounded-xl shadow-sm hover:bg-orange-50 transition">تسوق الآن</button>
+                    </div>
+                    <div class="text-6xl text-white/30 absolute -left-2 -bottom-2 transform rotate-12">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                </div>
+
+                <!-- Fast Features Row -->
+                <div class="grid grid-cols-4 gap-2 text-center py-2 bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-orange-50 text-vitto-500 flex items-center justify-center mb-1 text-base"><i class="fas fa-truck-fast"></i></div>
+                        <span class="text-[10px] font-bold text-gray-700">شحن سريع</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1 text-base"><i class="fas fa-shield-alt"></i></div>
+                        <span class="text-[10px] font-bold text-gray-700">ضمان أصلي</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-1 text-base"><i class="fas fa-headset"></i></div>
+                        <span class="text-[10px] font-bold text-gray-700">دعم 24/7</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-1 text-base"><i class="fas fa-undo"></i></div>
+                        <span class="text-[10px] font-bold text-gray-700">إرجاع سهل</span>
+                    </div>
+                </div>
+
+                <!-- Popular Categories Slider -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-extrabold text-gray-800 text-sm">الفئات الشائعة</h3>
+                        <button onclick="switchTab('categories')" class="text-xs font-bold text-vitto-500 hover:underline">عرض الكل <i class="fas fa-chevron-left text-[10px]"></i></button>
+                    </div>
+                    <div id="home-categories-list" class="flex space-x-3 space-x-reverse overflow-x-auto hide-scrollbar pb-1">
+                        <!-- Dynamic Populated -->
+                    </div>
+                </div>
+
+                <!-- Flash Deals Section -->
+                <div class="bg-orange-50/70 p-3.5 rounded-2xl border border-orange-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <span class="w-3 h-3 rounded-full bg-vitto-500 inline-block pulse-dot"></span>
+                            <h3 class="font-black text-gray-900 text-sm">تخفيضات خاطفة ⚡</h3>
+                        </div>
+                        <div class="bg-vitto-500 text-white text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg shadow-sm">
+                            <span id="countdown-timer">05:42:19</span>
+                        </div>
+                    </div>
+                    <div id="flash-deals-grid" class="grid grid-cols-2 gap-3">
+                        <!-- Flash deal items dynamically added -->
+                    </div>
+                </div>
+
+                <!-- New Arrivals Grid -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-extrabold text-gray-800 text-sm">أحدث المنتجاتوصلت حديثاً 🔥</h3>
+                    </div>
+                    <div id="new-arrivals-grid" class="grid grid-cols-2 gap-3">
+                        <!-- Dynamic Items -->
+                    </div>
+                </div>
+
+                <!-- Best Sellers Grid -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-extrabold text-gray-800 text-sm">الأكثر مبيعاً ⭐</h3>
+                    </div>
+                    <div id="best-sellers-grid" class="grid grid-cols-2 gap-3">
+                        <!-- Dynamic Items -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. CATEGORIES TAB PAGE VIEW -->
+            <section id="page-categories" class="page-view hidden p-4">
+                <div class="mb-4">
+                    <h2 class="text-base font-extrabold text-gray-800 mb-1">جميع الأقسام والفئات</h2>
+                    <p class="text-xs text-gray-500">اختر قسم لتصفح أفضل المنتجات المتوفرة في فيتو</p>
+                </div>
+                <div id="all-categories-grid" class="grid grid-cols-3 gap-3">
+                    <!-- 30+ Categories dynamically rendered here -->
+                </div>
+            </section>
+
+            <!-- 3. CATEGORY PRODUCTS SUB-VIEW -->
+            <section id="page-category-products" class="page-view hidden p-4">
+                <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                    <div>
+                        <span class="text-xs text-gray-400">قسم:</span>
+                        <h2 id="current-category-title" class="text-base font-extrabold text-gray-800">اسم الفئة</h2>
+                    </div>
+                    <span id="category-products-count" class="bg-orange-100 text-vitto-500 text-xs px-2.5 py-1 rounded-full font-bold">0 منتج</span>
+                </div>
+                <div id="category-products-grid" class="grid grid-cols-2 gap-3">
+                    <!-- Dynamically filled -->
+                </div>
+            </section>
+
+            <!-- 4. PRODUCT DETAIL FULL PAGE SUB-VIEW -->
+            <section id="page-product-detail" class="page-view hidden">
+                <div id="product-detail-container" class="space-y-4 pb-6">
+                    <!-- Dynamic details loaded here -->
+                </div>
+            </section>
+
+            <!-- 5. CART & CHECKOUT TAB PAGE VIEW -->
+            <section id="page-cart" class="page-view hidden p-4 space-y-4">
+                <!-- Cart Header / Stepper -->
+                <div id="checkout-stepper" class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center text-xs font-bold text-gray-400">
+                    <div id="step-dot-1" class="flex flex-col items-center text-vitto-500">
+                        <span class="w-6 h-6 rounded-full bg-vitto-500 text-white flex items-center justify-center text-xs mb-1">1</span>
+                        <span>السلة</span>
+                    </div>
+                    <div class="h-0.5 flex-1 bg-gray-200 mx-2" id="line-1"></div>
+                    <div id="step-dot-2" class="flex flex-col items-center">
+                        <span class="w-6 h-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs mb-1">2</span>
+                        <span>العنوان والتوصيل</span>
+                    </div>
+                    <div class="h-0.5 flex-1 bg-gray-200 mx-2" id="line-2"></div>
+                    <div id="step-dot-3" class="flex flex-col items-center">
+                        <span class="w-6 h-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs mb-1">3</span>
+                        <span>الدفع والطلب</span>
+                    </div>
+                </div>
+
+                <!-- STEP 1: CART ITEMS LIST -->
+                <div id="cart-step-1" class="space-y-3">
+                    <div id="cart-items-container" class="space-y-3">
+                        <!-- Dynamic items -->
+                    </div>
+
+                    <!-- Discount Coupon Input Box -->
+                    <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-2 space-x-reverse">
+                        <i class="fas fa-ticket-alt text-vitto-500 text-lg"></i>
+                        <input type="text" id="coupon-code-input" placeholder="أدخل كود التخفيض (مثلاً: VITTO20)" class="flex-1 bg-gray-50 text-xs py-2 px-3 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500 font-mono">
+                        <button onclick="applyDiscountCoupon()" class="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-vitto-500 transition">تطبيق</button>
+                    </div>
+
+                    <!-- Order Total Summary Card -->
+                    <div id="cart-summary-card" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2.5 text-xs text-gray-600">
+                        <div class="flex justify-between">
+                            <span>إجمالي المنتجات:</span>
+                            <span id="summary-subtotal" class="font-bold text-gray-800">0 ل.س</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>قيمة الخصم:</span>
+                            <span id="summary-discount" class="font-bold text-emerald-600">0 ل.س</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>رسوم التوصيل:</span>
+                            <span id="summary-shipping" class="font-bold text-gray-800">تحدد في الخطوة التالية</span>
+                        </div>
+                        <div class="border-t border-gray-100 pt-2.5 flex justify-between items-center text-sm font-extrabold text-gray-900">
+                            <span>المبلغ الإجمالي الكلي:</span>
+                            <span id="summary-grand-total" class="text-vitto-500 text-base">0 ل.س</span>
+                        </div>
+                        <button onclick="goToCheckoutStep(2)" id="btn-to-step-2" class="w-full bg-vitto-500 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:bg-vitto-600 transition mt-2 flex items-center justify-center">
+                            <span>المتابعة إلى عنوان التسليم</span>
+                            <i class="fas fa-chevron-left me-2 text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: ADDRESS & DELIVERY SELECTION -->
+                <div id="cart-step-2" class="hidden space-y-4">
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                        <h3 class="font-extrabold text-sm text-gray-800 flex items-center">
+                            <i class="fas fa-map-marker-alt text-vitto-500 me-2"></i> اختيار عنوان التسليم
+                        </h3>
+                        
+                        <!-- Saved Address Cards Select -->
+                        <div id="checkout-address-list" class="space-y-2">
+                            <!-- Dynamic saved addresses list with radio selection -->
+                        </div>
+
+                        <button onclick="openAddressModal()" class="w-full py-2.5 border-2 border-dashed border-gray-300 hover:border-vitto-500 rounded-xl text-xs font-bold text-gray-600 flex items-center justify-center space-x-1 space-x-reverse">
+                            <i class="fas fa-plus text-vitto-500"></i>
+                            <span>إضافة عنوان جديد جديد على الخريطة</span>
+                        </button>
+                    </div>
+
+                    <!-- Shipping Method Accordion -->
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                        <h3 class="font-extrabold text-sm text-gray-800 flex items-center">
+                            <i class="fas fa-truck text-vitto-500 me-2"></i> طريقة الشحن والتوصيل
+                        </h3>
+                        <div class="border border-orange-200 bg-orange-50/50 p-3 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center space-x-3 space-x-reverse">
+                                <i class="fas fa-shipping-fast text-vitto-500 text-xl"></i>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-800">فريق توصيل فيتو السريع</h4>
+                                    <p class="text-[10px] text-gray-500">التوصيل خلال 24 - 48 ساعة</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-black text-vitto-500">15,000 ل.س</span>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-2 space-x-reverse">
+                        <button onclick="goToCheckoutStep(1)" class="w-1/3 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold text-xs hover:bg-gray-300">الرجوع للسلة</button>
+                        <button onclick="goToCheckoutStep(3)" class="w-2/3 bg-vitto-500 text-white py-3 rounded-xl font-bold text-xs hover:bg-vitto-600 shadow-md">المتابعة إلى طرق الدفع</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: PAYMENT METHOD & FINAL ORDER PLACEMENT -->
+                <div id="cart-step-3" class="hidden space-y-4">
+                    <!-- Payment Methods -->
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                        <h3 class="font-extrabold text-sm text-gray-800 flex items-center">
+                            <i class="fas fa-wallet text-vitto-500 me-2"></i> طريقة الدفع المحددة
+                        </h3>
+                        <div class="border-2 border-vitto-500 bg-orange-50/30 p-3 rounded-xl flex items-center justify-between cursor-pointer">
+                            <div class="flex items-center space-x-3 space-x-reverse">
+                                <div class="w-5 h-5 rounded-full border-4 border-vitto-500 bg-white"></div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-800">نقداً عند الاستلام (COD)</h4>
+                                    <p class="text-[10px] text-gray-500">ادفع نقداً لمندوب التوصيل عند استلام الطلب</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-money-bill-wave text-emerald-600 text-lg"></i>
+                        </div>
+                    </div>
+
+                    <!-- Notes Message to Merchant -->
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2">
+                        <label class="block text-xs font-bold text-gray-700">اترك رسالة أو ملاحظات للشحن (اختياري)</label>
+                        <textarea id="order-notes-input" rows="2" placeholder="مثال: يرجى الاتصال قبل الوصول بـ 10 دقائق..." class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500"></textarea>
+                    </div>
+
+                    <!-- Terms Checkbox & Place Order Button -->
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                        <label class="flex items-start space-x-2 space-x-reverse cursor-pointer">
+                            <input type="checkbox" id="agree-terms-check" checked class="mt-0.5 rounded text-vitto-500 focus:ring-vitto-500">
+                            <span class="text-xs text-gray-600">أوافق على <button onclick="openStaticPage('terms')" type="button" class="text-vitto-500 underline font-bold">الشروط والأحكام</button> و<button onclick="openStaticPage('privacy')" type="button" class="text-vitto-500 underline font-bold">سياسة الخصوصية</button> لمتجر فيتو.</span>
+                        </label>
+
+                        <div class="border-t border-gray-100 pt-3 flex justify-between items-center text-sm font-black text-gray-900">
+                            <span>المبلغ الكلي للطلب:</span>
+                            <span id="checkout-final-total" class="text-vitto-500 text-lg">0 ل.س</span>
+                        </div>
+
+                        <div class="flex space-x-2 space-x-reverse pt-2">
+                            <button onclick="goToCheckoutStep(2)" class="w-1/3 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold text-xs hover:bg-gray-300">الرجوع</button>
+                            <button onclick="placeFinalOrder()" class="w-2/3 bg-emerald-600 text-white py-3 rounded-xl font-bold text-xs shadow-lg hover:bg-emerald-700 transition flex items-center justify-center space-x-1 space-x-reverse">
+                                <i class="fas fa-check-circle"></i>
+                                <span>تأكيد وإتمام الشراء الآن</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. ACCOUNT TAB PAGE VIEW -->
+            <section id="page-account" class="page-view hidden p-4 space-y-4">
+                <!-- User Profile Header Card -->
+                <div class="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-5 rounded-2xl shadow-md flex items-center space-x-4 space-x-reverse relative overflow-hidden">
+                    <div class="relative">
+                        <img id="account-avatar-img" src="https://placehold.co/150x150/ff5000/ffffff?text=YA" class="w-16 h-16 rounded-full border-2 border-vitto-500 object-cover">
+                        <button onclick="openSubPage('edit-profile')" class="absolute bottom-0 right-0 bg-vitto-500 text-white p-1 rounded-full text-[10px] w-5 h-5 flex items-center justify-center border border-white">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1">
+                        <h2 id="account-user-fullname" class="text-base font-extrabold text-white">ياسر عاشور</h2>
+                        <p id="account-user-phone" class="text-xs text-gray-300 font-mono dir-ltr text-right">0959248901</p>
+                        <span class="inline-block mt-1 bg-vitto-500/30 text-vitto-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-vitto-500/50">عميل مميز VIP</span>
+                    </div>
+                    <button onclick="openSubPage('edit-profile')" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl font-bold transition">
+                        تعديل
+                    </button>
+                </div>
+
+                <!-- Navigation List Options -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100 text-xs text-gray-700">
+                    <button onclick="openSubPage('orders')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-8 h-8 rounded-xl bg-orange-50 text-vitto-500 flex items-center justify-center text-sm"><i class="fas fa-box-open"></i></div>
+                            <span class="font-bold text-gray-800">طلباتي</span>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="openSubPage('addresses')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm"><i class="fas fa-map-marked-alt"></i></div>
+                            <span class="font-bold text-gray-800">عناويني (عنوان التسليم)</span>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="openSubPage('wishlist')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-sm"><i class="fas fa-heart"></i></div>
+                            <span class="font-bold text-gray-800">المفضلة</span>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="openSubPage('coupons')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm"><i class="fas fa-gift"></i></div>
+                            <span class="font-bold text-gray-800">الجوائز والقسائم</span>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="openSubPage('contact')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm"><i class="fas fa-envelope-open-text"></i></div>
+                            <span class="font-bold text-gray-800">اتصل بنا</span>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="openStaticPage('terms')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-8 h-8 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center text-sm"><i class="fas fa-file-contract"></i></div>
+                            <span class="font-bold text-gray-800">الشروط والأحكام</span>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+
+                    <button onclick="openStaticPage('privacy')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm"><i class="fas fa-user-shield"></i></div>
+                            <span class="font-bold text-gray-800">سياسة الخصوصية</span>
+                        </div>
+                        <i class="fas fa-chevron-left text-gray-400 text-xs"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 7. SUB-PAGE: EDIT PROFILE -->
+            <section id="page-edit-profile" class="page-view hidden p-4">
+                <form id="profile-form" onsubmit="saveProfileData(event)" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                    <div class="text-center pb-2 border-b border-gray-100">
+                        <div class="relative inline-block">
+                            <img id="form-avatar-preview" src="https://placehold.co/150x150/ff5000/ffffff?text=YA" class="w-20 h-20 rounded-full border-4 border-orange-100 object-cover mx-auto">
+                            <label class="absolute bottom-0 right-0 bg-vitto-500 text-white p-2 rounded-full text-xs cursor-pointer shadow-md">
+                                <i class="fas fa-camera"></i>
+                                <input type="file" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+                            </label>
+                        </div>
+                        <p class="text-[11px] text-gray-400 mt-2">تغيير الصورة الشخصية</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">الاسم الأول</label>
+                            <input type="text" id="input-first-name" value="ياسر" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">اسم العائلة</label>
+                            <input type="text" id="input-last-name" value="عاشور" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">رقم الهاتف</label>
+                        <input type="tel" id="input-phone" value="0959248901" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500 font-mono dir-ltr text-right">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">البريد الإلكتروني</label>
+                        <input type="email" id="input-email" value="yasser.ashour@example.com" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500 font-mono">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">تاريخ الميلاد</label>
+                            <input type="date" id="input-dob" value="1995-05-15" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">الجنس</label>
+                            <select id="input-gender" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
+                                <option value="ذكر" selected>ذكر</option>
+                                <option value="أنثى">أنثى</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-vitto-500 text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-vitto-600 transition">
+                        حفظ التغيرات
+                    </button>
+                </form>
+            </section>
+
+            <!-- 8. SUB-PAGE: MY ORDERS -->
+            <section id="page-orders" class="page-view hidden p-4 space-y-3">
+                <div id="orders-list-container" class="space-y-3">
+                    <!-- Dynamic Orders Items -->
+                </div>
+            </section>
+
+            <!-- 9. SUB-PAGE: MY ADDRESSES -->
+            <section id="page-addresses" class="page-view hidden p-4 space-y-3">
+                <button onclick="openAddressModal()" class="w-full bg-vitto-500 text-white py-3 rounded-xl font-bold text-xs shadow-md flex items-center justify-center space-x-2 space-x-reverse mb-3">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>إضافة عنوان توصيل جديد</span>
+                </button>
+                <div id="saved-addresses-container" class="space-y-3">
+                    <!-- Address items rendered dynamically -->
+                </div>
+            </section>
+
+            <!-- 10. SUB-PAGE: WISHLIST -->
+            <section id="page-wishlist" class="page-view hidden p-4">
+                <div id="wishlist-grid" class="grid grid-cols-2 gap-3">
+                    <!-- Dynamically filled favorite items -->
+                </div>
+            </section>
+
+            <!-- 11. SUB-PAGE: REWARDS & COUPONS -->
+            <section id="page-coupons" class="page-view hidden p-4 space-y-3">
+                <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 rounded-2xl shadow-sm text-center">
+                    <i class="fas fa-coins text-3xl mb-1 text-amber-200"></i>
+                    <h3 class="font-extrabold text-sm">رصيد نقاط فيتو: 350 نقطة</h3>
+                    <p class="text-xs text-amber-100">تعادل خصم بقيمة 35,000 ل.س</p>
+                </div>
+
+                <h3 class="font-extrabold text-xs text-gray-700 pt-2">القسائم الفعالة المتاحة لك:</h3>
+                
+                <div class="bg-white border border-amber-200 p-3.5 rounded-2xl shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded font-bold">خصم 20%</span>
+                        <h4 class="font-extrabold text-xs text-gray-800 mt-1">كود VITTO20</h4>
+                        <p class="text-[10px] text-gray-400">ينتهي في 31 ديسمبر 2026</p>
+                    </div>
+                    <button onclick="copyCouponCode('VITTO20')" class="bg-orange-50 text-vitto-500 text-xs font-bold px-3 py-1.5 rounded-xl border border-orange-200">
+                        نسخ الكود
+                    </button>
+                </div>
+
+                <div class="bg-white border border-gray-200 p-3.5 rounded-2xl shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold">توصيل مجاني</span>
+                        <h4 class="font-extrabold text-xs text-gray-800 mt-1">كود FREESHIP</h4>
+                        <p class="text-[10px] text-gray-400">للطلبات فوق 200,000 ل.س</p>
+                    </div>
+                    <button onclick="copyCouponCode('FREESHIP')" class="bg-orange-50 text-vitto-500 text-xs font-bold px-3 py-1.5 rounded-xl border border-orange-200">
+                        نسخ الكود
+                    </button>
+                </div>
+            </section>
+
+            <!-- 12. SUB-PAGE: CONTACT US -->
+            <section id="page-contact" class="page-view hidden p-4 space-y-4">
+                <!-- Store Quick Contact info -->
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2 text-xs">
+                    <h3 class="font-extrabold text-sm text-gray-800 mb-2 border-b border-gray-100 pb-2">معلومات التواصل والمقر</h3>
+                    <div class="flex items-start space-x-2 space-x-reverse text-gray-600">
+                        <i class="fas fa-map-marker-alt text-vitto-500 mt-0.5"></i>
+                        <span>العنوان الرئيسي: دمشق - قدسيا - ضاحية خلف التيم سنتر</span>
+                    </div>
+                    <div class="flex items-center space-x-2 space-x-reverse text-gray-600">
+                        <i class="fas fa-phone-alt text-vitto-500"></i>
+                        <span class="font-mono dir-ltr text-right">0959248901 / 011-2233445</span>
+                    </div>
+                    <div class="flex items-center space-x-2 space-x-reverse text-gray-600">
+                        <i class="fas fa-envelope text-vitto-500"></i>
+                        <span class="font-mono">support@vitto-store.com</span>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <form onsubmit="submitContactForm(event)" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                    <h3 class="font-extrabold text-sm text-gray-800">إرسال استفسار أو رسالة</h3>
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">القسم الموجه له</label>
+                        <select id="contact-department" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
+                            <option value="خدمة العملاء">خدمة العملاء</option>
+                            <option value="القسم التقني">القسم التقني والدعم</option>
+                            <option value="قسم الشحن والتوصيل">قسم الشحن والتوصيل</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">البريد الإلكتروني</label>
+                        <input type="email" id="contact-email" value="yasser.ashour@example.com" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500 font-mono">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">نص الرسالة</label>
+                        <textarea id="contact-message" rows="3" required placeholder="اكتب تفاصيل استفسارك هنا..." class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">مرفق أو صورة (اختياري)</label>
+                        <input type="file" id="contact-attachment" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-vitto-500 hover:file:bg-orange-100">
+                    </div>
+
+                    <button type="submit" class="w-full bg-vitto-500 text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-vitto-600 transition">
+                        إرسال الرسالة
+                    </button>
+                </form>
+            </section>
+
+            <!-- 13. SUB-PAGE: STATIC (TERMS / PRIVACY) -->
+            <section id="page-static-text" class="page-view hidden p-4">
+                <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-3 text-xs leading-relaxed text-gray-600">
+                    <h2 id="static-page-title" class="text-base font-extrabold text-gray-900 border-b pb-2 border-gray-100"></h2>
+                    <div id="static-page-content" class="space-y-2"></div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Fixed Bottom Navigation Bar -->
+        <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-nav border-t border-gray-200/80 z-40 px-3 py-2 flex justify-around items-center">
+            <button onclick="switchTab('home')" id="tab-btn-home" class="flex flex-col items-center text-vitto-500 transition-all">
+                <i class="fas fa-home text-lg"></i>
+                <span class="text-[10px] font-bold mt-0.5">الرئيسية</span>
+            </button>
+            <button onclick="switchTab('categories')" id="tab-btn-categories" class="flex flex-col items-center text-gray-400 hover:text-vitto-500 transition-all">
+                <i class="fas fa-th-large text-lg"></i>
+                <span class="text-[10px] font-bold mt-0.5">الفئات</span>
+            </button>
+            <button onclick="switchTab('cart')" id="tab-btn-cart" class="flex flex-col items-center text-gray-400 hover:text-vitto-500 transition-all relative">
+                <i class="fas fa-shopping-cart text-lg"></i>
+                <span class="text-[10px] font-bold mt-0.5">السلة</span>
+                <span id="nav-cart-badge" class="absolute -top-1 right-2 bg-vitto-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold border-2 border-white">0</span>
+            </button>
+            <button onclick="switchTab('account')" id="tab-btn-account" class="flex flex-col items-center text-gray-400 hover:text-vitto-500 transition-all">
+                <i class="fas fa-user text-lg"></i>
+                <span class="text-[10px] font-bold mt-0.5">الحساب</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- ADD / EDIT ADDRESS MODAL -->
+    <div id="address-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-extrabold text-sm text-gray-800">تحديد موقع عنوان جديد</h3>
+                <button onclick="closeAddressModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-base"></i></button>
+            </div>
+
+            <!-- Interactive GPS Map simulation canvas -->
+            <div class="relative w-full h-40 bg-slate-200 rounded-xl overflow-hidden border border-gray-300 flex items-center justify-center">
+                <div class="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:12px_12px] opacity-70"></div>
+                <div class="text-center z-10">
+                    <i class="fas fa-map-marker-alt text-vitto-500 text-3xl animate-bounce"></i>
+                    <p class="text-[10px] font-bold text-gray-700 bg-white/90 px-2 py-1 rounded-full shadow-sm mt-1">تم تحديد الموقع عبر الخريطة</p>
+                </div>
+            </div>
+
+            <form onsubmit="saveNewAddress(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">المحافظة / المدينة</label>
+                    <select id="addr-city" class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
+                        <option value="دمشق">دمشق</option>
+                        <option value="ريف دمشق" selected>ريف دمشق</option>
+                        <option value="حلب">حلب</option>
+                        <option value="لاذقية">اللاذقية</option>
+                        <option value="حمص">حمص</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">المنطقة / الشارع الرئيسي</label>
+                    <input type="text" id="addr-street" placeholder="مثال: قدسيا - ضاحية خلف التيم سنتر" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">تفاصيل البناية / الطابق / الشقة</label>
+                    <input type="text" id="addr-details" placeholder="مثال: بناية الياسمين - الطابق الثاني - شقة 4" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">رقم هاتف التواصل للعنوان</label>
+                    <input type="tel" id="addr-phone" value="0959248901" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500 font-mono dir-ltr text-right">
+                </div>
+                <div class="flex space-x-2 space-x-reverse pt-2">
+                    <button type="button" onclick="closeAddressModal()" class="w-1/3 bg-gray-200 text-gray-700 py-2.5 rounded-xl font-bold text-xs">إلغاء</button>
+                    <button type="submit" class="w-2/3 bg-vitto-500 text-white py-2.5 rounded-xl font-bold text-xs shadow-md hover:bg-vitto-600">حفظ العنوان</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* ----------------------------------------------------
+           STORE DATA STRUCTURE & DATA INITIALIZATION
+           ---------------------------------------------------- */
+        
+        // 30+ Complete Categories
+        const CATEGORIES = [
+            { id: 'mobile', name: 'الموبايل والتابلت', icon: 'fa-mobile-alt' },
+            { id: 'makeup', name: 'المكياج', icon: 'fa-magic' },
+            { id: 'elec-acc', name: 'الإكسسوارات الإلكترونية', icon: 'fa-headphones' },
+            { id: 'bags', name: 'الحقائب', icon: 'fa-shopping-bag' },
+            { id: 'kitchen', name: 'البيت والمطابخ', icon: 'fa-utensils' },
+            { id: 'laptop', name: 'الكمبيوتر واللابتوب', icon: 'fa-laptop' },
+            { id: 'women-fashion', name: 'الموضة النسائية', icon: 'fa-female' },
+            { id: 'men-fashion', name: 'الموضة الرجالية', icon: 'fa-user-tie' },
+            { id: 'kids-fashion', name: 'الموضة الولادية', icon: 'fa-child' },
+            { id: 'perfumes', name: 'العطور ومزيلات العرق', icon: 'fa-spray-can' },
+            { id: 'face-care', name: 'العناية بالوجه والشفاه', icon: 'fa-smile' },
+            { id: 'sunglasses', name: 'النظارات الشمسية', icon: 'fa-glasses' },
+            { id: 'hair-care', name: 'العناية بالشعر', icon: 'fa-cut' },
+            { id: 'body-care', name: 'العناية بالجسم', icon: 'fa-spa' },
+            { id: 'oral-care', name: 'العناية بالفم', icon: 'fa-tooth' },
+            { id: 'hand-foot-care', name: 'العناية بالأيدي والأقدام', icon: 'fa-hand-holding-heart' },
+            { id: 'toys', name: 'الألعاب', icon: 'fa-gamepad' },
+            { id: 'sports', name: 'أدوات الرياضة', icon: 'fa-dumbbell' },
+            { id: 'culture-art', name: 'الثقافة والفن', icon: 'fa-paint-brush' },
+            { id: 'medical-tools', name: 'الأدوات الطبية', icon: 'fa-user-md' },
+            { id: 'winter-supplies', name: 'اللوازم الشتوية', icon: 'fa-snowflake' },
+            { id: 'green-energy', name: 'الطاقة البديلة والمنظفات', icon: 'fa-solar-panel' },
+            { id: 'exclusive-brand', name: 'الماركة الحصرية', icon: 'fa-crown' },
+            { id: 'industrial-tools', name: 'الأدوات الصناعية', icon: 'fa-tools' },
+            { id: 'baby-care', name: 'العناية بالطفل', icon: 'fa-baby' },
+            { id: 'car-supplies', name: 'مستلزمات السيارات', icon: 'fa-car' },
+            { id: 'device-acc', name: 'ملحقات الأجهزة', icon: 'fa-plug' }
+        ];
+
+        // Comprehensive Mock Products Catalogue
+        const PRODUCTS = [
+            {
+                id: 1,
+                name: "هاتف سامسونج جالاكسي S24 ألترا - 512GB",
+                catId: "mobile",
+                price: 18500000,
+                oldPrice: 20000000,
+                discount: "-8%",
+                badge: "يتم تجهيز المنتج خلال 24 ساعة عمل",
+                stock: true,
+                rating: 4.9,
+                reviewsCount: 14,
+                images: [
+                    "https://placehold.co/600x600/1e2022/ffffff?text=Galaxy+S24+Ultra",
+                    "https://placehold.co/600x600/3b82f6/ffffff?text=S24+Ultra+Back",
+                    "https://placehold.co/600x600/ff5000/ffffff?text=S24+Ultra+Side"
+                ],
+                colors: ["#111111", "#8b5cf6", "#f59e0b"],
+                description: "أحدث هواتف سامسونج بشاشة Dynamic AMOLED 2X قياس 6.8 بوصة ومعالج Snapdragon 8 Gen 3 وقلم S-Pen مدمج وكاميرا بدقة 200 ميجابكسل.",
+                isFlash: true,
+                isNew: true,
+                isBest: true
+            },
+            {
+                id: 2,
+                name: "سماعات آبل ايربودز برو الجيل الثاني Type-C",
+                catId: "elec-acc",
+                price: 3200000,
+                oldPrice: 3800000,
+                discount: "-15%",
+                badge: "يتم تجهيز المنتج خلال 24 ساعة عمل",
+                stock: true,
+                rating: 4.8,
+                reviewsCount: 29,
+                images: [
+                    "https://placehold.co/600x600/ffffff/111111?text=AirPods+Pro+2",
+                    "https://placehold.co/600x600/e2e8f0/111111?text=Case+Open"
+                ],
+                colors: ["#ffffff"],
+                description: "إلغاء ضوضاء نشط مضاعف، منفذ شحن USB-C، وصوت مكاني مخصص مع تتبع ديناميكي للرأس.",
+                isFlash: true,
+                isNew: false,
+                isBest: true
+            },
+            {
+                id: 3,
+                name: "ساعة ذكية أبل ووتش سيريز 9 - 45mm",
+                catId: "elec-acc",
+                price: 5800000,
+                oldPrice: 6200000,
+                discount: "-6%",
+                badge: "يتم تجهيز المنتج خلال 24 ساعة عمل",
+                stock: true,
+                rating: 4.7,
+                reviewsCount: 8,
+                images: [
+                    "https://placehold.co/600x600/000000/ffffff?text=Apple+Watch+9"
+                ],
+                colors: ["#000000", "#e11d48", "#10b981"],
+                description: "معالج S9 الجديد كلياً مع دعم حركة النقر المزدوج للرد وشاشة أكثر سطوعاً مع تتبع المؤشرات الصحية.",
+                isFlash: false,
+                isNew: true,
+                isBest: false
+            },
+            {
+                id: 4,
+                name: "عطر شانيل بلو دي شانيل أو دو بارفان - 100 مل",
+                catId: "perfumes",
+                price: 2400000,
+                oldPrice: 2900000,
+                discount: "-17%",
+                badge: "يتم تجهيز المنتج خلال 24 ساعة عمل",
+                stock: true,
+                rating: 5.0,
+                reviewsCount: 42,
+                images: [
+                    "https://placehold.co/600x600/1e293b/ffffff?text=Bleu+De+Chanel"
+                ],
+                colors: ["#1e293b"],
+                description: "عطر خشب أروما فريد مع نفحات خشب الصندل النيوزيلندي والأرز والحمضيات للرجل العصري.",
+                isFlash: true,
+                isNew: false,
+                isBest: true
+            },
+            {
+                id: 5,
+                name: "حقيبة ظهر نسائية فاخرة من جلد الميكروفايبر",
+                catId: "bags",
+                price: 450000,
+                oldPrice: 600000,
+                discount: "-25%",
+                badge: "يتم تجهيز المنتج خلال 24 ساعة عمل",
+                stock: true,
+                rating: 4.6,
+                reviewsCount: 11,
+                images: [
+                    "https://placehold.co/600x600/854d0e/ffffff?text=Luxury+Bag"
+                ],
+                colors: ["#854d0e", "#000000", "#b91c1c"],
+                description: "تصميم أنيق ومقاوم للمياه مع جيوب متعدده مبطنة تناسب الأجهزة واللوازم اليومية.",
+                isFlash: false,
+                isNew: true,
+                isBest: false
+            },
+            {
+                id: 6,
+                name: "ماكينة قهوة إسبرايسو جيباس 15 بار",
+                catId: "kitchen",
+                price: 1650000,
+                oldPrice: 1900000,
+                discount: "-13%",
+                badge: "يتم تجهيز المنتج خلال 24 ساعة عمل",
+                stock: true,
+                rating: 4.5,
+                reviewsCount: 19,
+                images: [
+                    "https://placehold.co/600x600/334155/ffffff?text=Espresso+Maker"
+                ],
+                colors: ["#334155"],
+                description: "محرك قوي بقدرة 1050 واط مع أنبوب تبخير لتحضير الكابتشينو واللاتيه بكل سهولة في المنزل.",
+                isFlash: false,
+                isNew: false,
+                isBest: true
+            },
+            {
+                id: 7,
+                name: "لوحة طاقة شمسية مونو كريستال 550 واط",
+                catId: "green-energy",
+                price: 2100000,
+                oldPrice: 2400000,
+                discount: "-12%",
+                badge: "يتم تجهيز المنتج خلال 24 ساعة عمل",
+                stock: true,
+                rating: 4.9,
+                reviewsCount: 31,
+                images: [
+                    "https://placehold.co/600x600/0284c7/ffffff?text=Solar+Panel+550W"
+                ],
+                colors: ["#0284c7"],
+                description: "كفاءة عالية تصل إلى 21.5% مع إطار من الألمنيوم المقوى والمقاوم للظروف الجوية القاسية.",
+                isFlash: true,
+                isNew: true,
+                isBest: true
+            },
+            {
+                id: 8,
+                name: "سيروم العناية بالوجه بفيتامين C والأحمد العضوية",
+                catId: "face-care",
+                price: 180000,
+                oldPrice: 250000,
+                discount: "-28%",
+                badge: "يتم تجهيز المنتج خلال 24 ساعة عمل",
+                stock: true,
+                rating: 4.7,
+                reviewsCount: 22,
+                images: [
+                    "https://placehold.co/600x600/f97316/ffffff?text=Vitamin+C+Serum"
+                ],
+                colors: ["#f97316"],
+                description: "تركيبة فريدة لتفتيح البشرة وتحفيز الكولاجين والحماية من التجاعيد وعلامات التقدم بالعمر.",
+                isFlash: false,
+                isNew: true,
+                isBest: false
+            }
+        ];
+
+        // Global State Objects
+        let appState = {
+            cart: [],
+            wishlist: [2, 4], // Initial saved IDs
+            orders: [
+                {
+                    id: "VTO-98231",
+                    date: "2026-10-02 14:30",
+                    status: "قيد التوصيل",
+                    statusBg: "bg-blue-100 text-blue-800",
+                    items: [
+                        { name: "عطر شانيل بلو دي شانيل أو دو بارفان", price: 2400000, qty: 1, img: "https://placehold.co/600x600/1e293b/ffffff?text=Bleu+De+Chanel" }
+                    ],
+                    total: 2415000,
+                    payment: "نقداً عند الاستلام"
+                }
+            ],
+            addresses: [
+                {
+                    id: 1,
+                    city: "ريف دمشق",
+                    street: "قدسيا - ضاحية خلف التيم سنتر",
+                    details: "بناية السلام - الطابق الأول",
+                    phone: "0959248901",
+                    isDefault: true
+                }
+            ],
+            user: {
+                firstName: "ياسر",
+                lastName: "عاشور",
+                phone: "0959248901",
+                email: "yasser.ashour@example.com",
+                dob: "1995-05-15",
+                gender: "ذكر",
+                avatar: "https://placehold.co/150x150/ff5000/ffffff?text=YA"
+            },
+            discountAmount: 0,
+            activeCoupon: null,
+            navigationHistory: ['home']
+        };
+
+        let currentActiveTab = 'home';
+        let activeProductDetail = null;
+
+        // Page Initializer on DOM ready
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            renderCategoriesGrid();
+            renderHomeSections();
+            updateCartBadges();
+
+            // Simulate splash loader hide
+            setTimeout(() => {
+                const loader = document.getElementById('app-loader');
+                if (loader) {
+                    loader.classList.add('opacity-0');
+                    setTimeout(() => loader.remove(), 500);
+                }
+            }, 600);
+        });
+
+        // Save State to LocalStorage
+        function saveStateToStorage() {
+            localStorage.setItem('vitto_app_state', JSON.stringify({
+                cart: appState.cart,
+                wishlist: appState.wishlist,
+                addresses: appState.addresses,
+                user: appState.user,
+                orders: appState.orders
+            }));
+        }
+
+        // Load State from LocalStorage
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('vitto_app_state');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appState.cart = parsed.cart || [];
+                    appState.wishlist = parsed.wishlist || [2, 4];
+                    appState.addresses = parsed.addresses || appState.addresses;
+                    appState.user = parsed.user || appState.user;
+                    appState.orders = parsed.orders || appState.orders;
+                } catch (e) {
+                    console.error("Failed to load local state", e);
+                }
+            }
+            updateProfileUIDisplay();
+        }
+
+        // Toast Messages helper
+        function showToast(text, iconClass = "fa-check-circle") {
+            const toast = document.getElementById('toast-msg');
+            const toastText = document.getElementById('toast-text');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastText.innerText = text;
+            toastIcon.className = `fas ${iconClass} me-2 text-vitto-500`;
+
+            toast.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2500);
+        }
+
+        // Price Formatter (SYP - ل.س)
+        function formatPrice(amount) {
+            return amount.toLocaleString('ar-SY') + ' ل.س';
+        }
+
+        /* ----------------------------------------------------
+           NAVIGATION & VIEW SWITCHING LOGIC
+           ---------------------------------------------------- */
+        function switchTab(tabId) {
+            currentActiveTab = tabId;
+            appState.navigationHistory = [tabId];
+
+            // Hide all views
+            document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+
+            // Reset Top Header Controls
+            const headerSearch = document.getElementById('header-search-box');
+            const headerTitle = document.getElementById('header-title');
+            const backBtn = document.getElementById('header-back-btn');
+            const brandLogo = document.getElementById('header-brand');
+
+            backBtn.classList.add('hidden');
+            brandLogo.classList.remove('hidden');
+
+            // Update Tab Button Highlights
+            ['home', 'categories', 'cart', 'account'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (btn) {
+                    if (t === tabId) {
+                        btn.className = "flex flex-col items-center text-vitto-500 transition-all font-extrabold";
+                    } else {
+                        btn.className = "flex flex-col items-center text-gray-400 hover:text-vitto-500 transition-all";
+                    }
+                }
+            });
+
+            // Show Selected Tab
+            const targetView = document.getElementById(`page-${tabId}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            if (tabId === 'home') {
+                headerSearch.classList.remove('hidden');
+                headerTitle.classList.add('hidden');
+            } else if (tabId === 'categories') {
+                headerSearch.classList.add('hidden');
+                headerTitle.innerText = 'جميع الفئات الأقسام';
+                headerTitle.classList.remove('hidden');
+            } else if (tabId === 'cart') {
+                headerSearch.classList.add('hidden');
+                headerTitle.innerText = 'سلة المشتريات وإتمام الطلب';
+                headerTitle.classList.remove('hidden');
+                renderCartStep(1);
+            } else if (tabId === 'account') {
+                headerSearch.classList.add('hidden');
+                headerTitle.innerText = 'حسابي الشخصي';
+                headerTitle.classList.remove('hidden');
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openSubPage(pageId, title = '') {
+            appState.navigationHistory.push(pageId);
+
+            document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+
+            const backBtn = document.getElementById('header-back-btn');
+            const headerSearch = document.getElementById('header-search-box');
+            const headerTitle = document.getElementById('header-title');
+
+            backBtn.classList.remove('hidden');
+            headerSearch.classList.add('hidden');
+            headerTitle.classList.remove('hidden');
+
+            const targetView = document.getElementById(`page-${pageId}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            // Setup titles & data per subpage
+            if (pageId === 'edit-profile') {
+                headerTitle.innerText = 'تعديل البيانات الشخصية';
+                populateProfileForm();
+            } else if (pageId === 'orders') {
+                headerTitle.innerText = 'طلباتي ومتابعة الشحنات';
+                renderOrdersList();
+            } else if (pageId === 'addresses') {
+                headerTitle.innerText = 'عناويني المسجلة';
+                renderAddressesList();
+            } else if (pageId === 'wishlist') {
+                headerTitle.innerText = 'قائمة المفضلة';
+                renderWishlistGrid();
+            } else if (pageId === 'coupons') {
+                headerTitle.innerText = 'الجوائز والقسائم';
+            } else if (pageId === 'contact') {
+                headerTitle.innerText = 'اتصل بنا والخدمات';
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goBack() {
+            if (appState.navigationHistory.length > 1) {
+                appState.navigationHistory.pop();
+                const prev = appState.navigationHistory[appState.navigationHistory.length - 1];
+
+                if (['home', 'categories', 'cart', 'account'].includes(prev)) {
+                    switchTab(prev);
+                } else {
+                    openSubPage(prev);
+                }
+            } else {
+                switchTab('home');
+            }
+        }
+
+        /* ----------------------------------------------------
+           RENDER HOME & CATEGORIES CONTENT
+           ---------------------------------------------------- */
+        function renderHomeSections() {
+            // Home categories slider
+            const homeCats = CATEGORIES.slice(0, 8);
+            const catSlider = document.getElementById('home-categories-list');
+            if (catSlider) {
+                catSlider.innerHTML = homeCats.map(c => `
+                    <div onclick="openCategoryProducts('${c.id}')" class="flex flex-col items-center flex-shrink-0 cursor-pointer group">
+                        <div class="w-14 h-14 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-vitto-500 text-xl group-hover:bg-vitto-500 group-hover:text-white transition">
+                            <i class="fas ${c.icon}"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-gray-700 mt-1 max-w-[65px] text-center truncate">${c.name}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Flash Deals Grid
+            const flashItems = PRODUCTS.filter(p => p.isFlash);
+            const flashGrid = document.getElementById('flash-deals-grid');
+            if (flashGrid) {
+                flashGrid.innerHTML = flashItems.map(p => generateProductCardHTML(p)).join('');
+            }
+
+            // New Arrivals Grid
+            const newItems = PRODUCTS.filter(p => p.isNew);
+            const newGrid = document.getElementById('new-arrivals-grid');
+            if (newGrid) {
+                newGrid.innerHTML = newItems.map(p => generateProductCardHTML(p)).join('');
+            }
+
+            // Best Sellers Grid
+            const bestItems = PRODUCTS.filter(p => p.isBest);
+            const bestGrid = document.getElementById('best-sellers-grid');
+            if (bestGrid) {
+                bestGrid.innerHTML = bestItems.map(p => generateProductCardHTML(p)).join('');
+            }
+        }
+
+        function renderCategoriesGrid() {
+            const grid = document.getElementById('all-categories-grid');
+            if (!grid) return;
+            grid.innerHTML = CATEGORIES.map(c => `
+                <div onclick="openCategoryProducts('${c.id}')" class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center cursor-pointer hover:border-vitto-500 hover:shadow-md transition">
+                    <div class="w-12 h-12 rounded-xl bg-orange-50 text-vitto-500 flex items-center justify-center text-xl mb-2">
+                        <i class="fas ${c.icon}"></i>
+                    </div>
+                    <span class="text-xs font-bold text-gray-800 leading-tight">${c.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function openCategoryProducts(catId) {
+            const cat = CATEGORIES.find(c => c.id === catId);
+            const titleEl = document.getElementById('current-category-title');
+            const countEl = document.getElementById('category-products-count');
+            const grid = document.getElementById('category-products-grid');
+
+            if (titleEl) titleEl.innerText = cat ? cat.name : "المنتجات";
+
+            const filtered = PRODUCTS.filter(p => p.catId === catId);
+            if (countEl) countEl.innerText = `${filtered.length} منتج`;
+
+            if (grid) {
+                if (filtered.length === 0) {
+                    grid.innerHTML = `<div class="col-span-2 text-center py-10 text-gray-400 text-xs">لا توجد منتجات متوفرة حالياً في هذا القسم</div>`;
+                } else {
+                    grid.innerHTML = filtered.map(p => generateProductCardHTML(p)).join('');
+                }
+            }
+
+            openSubPage('category-products');
+        }
+
+        // Product Card Component Generator
+        function generateProductCardHTML(p) {
+            const isFav = appState.wishlist.includes(p.id);
+            return `
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 relative flex flex-col justify-between hover:shadow-md transition">
+                    <button onclick="toggleWishlist(${p.id}, event)" class="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center ${isFav ? 'text-rose-500' : 'text-gray-300'} hover:scale-110 transition">
+                        <i class="${isFav ? 'fas' : 'far'} fa-heart text-xs"></i>
+                    </button>
+
+                    <div onclick="openProductDetail(${p.id})" class="cursor-pointer space-y-2">
+                        <div class="relative w-full aspect-square rounded-xl overflow-hidden bg-gray-50">
+                            <img src="${p.images[0]}" alt="${p.name}" class="w-full h-full object-cover">
+                            ${p.discount ? `<span class="absolute bottom-2 left-2 bg-vitto-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-md dir-ltr">${p.discount}</span>` : ''}
+                        </div>
+
+                        <div>
+                            <span class="text-[9px] text-gray-400 block font-bold">متوفر في المتجر</span>
+                            <h4 class="text-xs font-bold text-gray-800 line-clamp-2 h-8 leading-snug">${p.name}</h4>
+                        </div>
+
+                        <div class="flex items-center space-x-1 space-x-reverse text-[10px] text-amber-500">
+                            <i class="fas fa-star"></i>
+                            <span class="font-bold text-gray-700">${p.rating}</span>
+                            <span class="text-gray-400">(${p.reviewsCount})</span>
+                        </div>
+
+                        <div>
+                            <div class="text-xs font-black text-vitto-500">${formatPrice(p.price)}</div>
+                            ${p.oldPrice ? `<div class="text-[10px] text-gray-400 line-through">${formatPrice(p.oldPrice)}</div>` : ''}
+                        </div>
+                    </div>
+
+                    <button onclick="addToCart(${p.id}, 1, event)" class="mt-2 w-full bg-orange-50 text-vitto-500 hover:bg-vitto-500 hover:text-white py-1.5 rounded-xl font-bold text-xs transition flex items-center justify-center space-x-1 space-x-reverse">
+                        <i class="fas fa-cart-plus"></i>
+                        <span>إضافة للسلة</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        /* ----------------------------------------------------
+           PRODUCT DETAIL SUB-PAGE VIEW
+           ---------------------------------------------------- */
+        function openProductDetail(productId) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            if (!product) return;
+
+            activeProductDetail = product;
+            const container = document.getElementById('product-detail-container');
+            const isFav = appState.wishlist.includes(product.id);
+
+            container.innerHTML = `
+                <!-- Main Image Slider Preview -->
+                <div class="relative bg-white border-b border-gray-100 pb-3">
+                    <img id="pd-main-img" src="${product.images[0]}" class="w-full aspect-square object-cover">
+                    <button onclick="toggleWishlist(${product.id}, event)" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center ${isFav ? 'text-rose-500' : 'text-gray-400'} text-lg">
+                        <i class="${isFav ? 'fas' : 'far'} fa-heart"></i>
+                    </button>
+
+                    <!-- Thumbnail Selectors -->
+                    <div class="flex justify-center space-x-2 space-x-reverse mt-3 px-4">
+                        ${product.images.map((img, idx) => `
+                            <img onclick="changePdImage('${img}')" src="${img}" class="w-12 h-12 rounded-lg border-2 border-orange-200 cursor-pointer object-cover">
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="px-4 space-y-4">
+                    <!-- Preparation Time Badge -->
+                    <div class="bg-orange-50 border border-orange-200 text-vitto-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 space-x-reverse">
+                        <i class="fas fa-clock text-vitto-500"></i>
+                        <span>${product.badge}</span>
+                    </div>
+
+                    <!-- Title & Stock Status -->
+                    <div>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-md mb-1">
+                            ${product.stock ? 'متوفر في المتجر' : 'غير متوفر'}
+                        </span>
+                        <h2 class="text-base font-black text-gray-900 leading-snug">${product.name}</h2>
+                    </div>
+
+                    <!-- Price Box -->
+                    <div class="flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+                        <div>
+                            <div class="text-lg font-black text-vitto-500">${formatPrice(product.price)}</div>
+                            ${product.oldPrice ? `<div class="text-xs text-gray-400 line-through">${formatPrice(product.oldPrice)}</div>` : ''}
+                        </div>
+                        ${product.discount ? `<span class="bg-red-500 text-white text-xs font-black px-2.5 py-1 rounded-xl dir-ltr">${product.discount} خصم</span>` : ''}
+                    </div>
+
+                    <!-- Color Pickers -->
+                    ${product.colors && product.colors.length > 0 ? `
+                        <div class="space-y-1.5">
+                            <label class="block text-xs font-bold text-gray-700">اختر اللون:</label>
+                            <div class="flex space-x-2 space-x-reverse">
+                                ${product.colors.map((c, i) => `
+                                    <span onclick="selectColorDot(this)" class="w-7 h-7 rounded-full border-2 ${i===0?'border-vitto-500 scale-110':'border-white'} shadow-sm cursor-pointer" style="background-color: ${c}"></span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Quantity Control & Add To Cart Bar -->
+                    <div class="flex items-center space-x-3 space-x-reverse bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
+                        <div class="flex items-center bg-gray-100 rounded-xl px-2 py-1">
+                            <button onclick="changeQty(-1)" class="w-8 h-8 text-gray-700 font-bold text-base flex items-center justify-center">-</button>
+                            <span id="pd-qty-val" class="w-8 text-center text-xs font-black">1</span>
+                            <button onclick="changeQty(1)" class="w-8 h-8 text-gray-700 font-bold text-base flex items-center justify-center">+</button>
+                        </div>
+                        <button onclick="addToCartFromPD()" class="flex-1 bg-vitto-500 text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-vitto-600 transition flex items-center justify-center space-x-2 space-x-reverse">
+                            <i class="fas fa-shopping-bag"></i>
+                            <span>إضافة إلى سلة التسوق</span>
+                        </button>
+                    </div>
+
+                    <!-- Description Section -->
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2">
+                        <h3 class="font-extrabold text-xs text-gray-800 border-b border-gray-100 pb-2">تفاصيل ومواصفات المنتج</h3>
+                        <p class="text-xs text-gray-600 leading-relaxed">${product.description}</p>
+                    </div>
+
+                    <!-- User Reviews Section -->
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-extrabold text-xs text-gray-800">تقييمات وآراء العملاء</h3>
+                            <span class="text-xs font-bold text-amber-500"><i class="fas fa-star me-1"></i>${product.rating} من 5</span>
+                        </div>
+
+                        <!-- Sample Comments -->
+                        <div class="space-y-2 pt-1">
+                            <div class="bg-gray-50 p-2.5 rounded-xl text-xs space-y-1">
+                                <div class="flex justify-between font-bold text-gray-800">
+                                    <span>محمد السوري</span>
+                                    <span class="text-amber-500 text-[10px]">★★★★★</span>
+                                </div>
+                                <p class="text-gray-600">منتج ممتاز وجودة عالية جداً، والتوصيل كان سريع جداً خلال 24 ساعة.</p>
+                            </div>
+                        </div>
+
+                        <!-- Add Review Box -->
+                        <form onsubmit="addNewReview(event)" class="space-y-2 pt-2 border-t border-gray-100">
+                            <label class="block text-xs font-bold text-gray-700">أضف رأيك أو تعليقك على المنتج</label>
+                            <textarea id="review-comment-input" required rows="2" placeholder="اكتب تجريتك مع المنتج هنا..." class="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500"></textarea>
+                            <button type="submit" class="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-vitto-500 transition">نشر التعليق</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            openSubPage('product-detail', product.name);
+        }
+
+        function changePdImage(src) {
+            const img = document.getElementById('pd-main-img');
+            if (img) img.src = src;
+        }
+
+        function selectColorDot(el) {
+            el.parentElement.querySelectorAll('span').forEach(s => {
+                s.className = "w-7 h-7 rounded-full border-2 border-white shadow-sm cursor-pointer";
+            });
+            el.className = "w-7 h-7 rounded-full border-2 border-vitto-500 scale-110 shadow-sm cursor-pointer";
+        }
+
+        let currentPdQty = 1;
+        function changeQty(delta) {
+            currentPdQty = Math.max(1, currentPdQty + delta);
+            const val = document.getElementById('pd-qty-val');
+            if (val) val.innerText = currentPdQty;
+        }
+
+        function addToCartFromPD() {
+            if (!activeProductDetail) return;
+            addToCart(activeProductDetail.id, currentPdQty);
+        }
+
+        function addNewReview(e) {
+            e.preventDefault();
+            const input = document.getElementById('review-comment-input');
+            if (input && input.value.trim()) {
+                showToast("شكراً لك! تم إرسال تعليقك وسيطهر بعد المراجعة");
+                input.value = "";
+            }
+        }
+
+        /* ----------------------------------------------------
+           CART & MULTI-STEP CHECKOUT LOGIC
+           ---------------------------------------------------- */
+        function addToCart(productId, qty = 1, event = null) {
+            if (event) event.stopPropagation();
+
+            const existing = appState.cart.find(item => item.productId === productId);
+            if (existing) {
+                existing.qty += qty;
+            } else {
+                appState.cart.push({ productId, qty });
+            }
+
+            saveStateToStorage();
+            updateCartBadges();
+            showToast("تمت إضافة المنتج إلى السلة بنجاح");
+        }
+
+        function updateCartBadges() {
+            const totalCount = appState.cart.reduce((sum, i) => sum + i.qty, 0);
+            const badge1 = document.getElementById('header-cart-badge');
+            const badge2 = document.getElementById('nav-cart-badge');
+            if (badge1) badge1.innerText = totalCount;
+            if (badge2) badge2.innerText = totalCount;
+        }
+
+        function renderCartStep(stepNum) {
+            // Hide all cart steps
+            document.getElementById('cart-step-1').classList.add('hidden');
+            document.getElementById('cart-step-2').classList.add('hidden');
+            document.getElementById('cart-step-3').classList.add('hidden');
+
+            // Update Stepper UI
+            [1, 2, 3].forEach(s => {
+                const dot = document.getElementById(`step-dot-${s}`);
+                if (dot) {
+                    if (s <= stepNum) {
+                        dot.className = "flex flex-col items-center text-vitto-500 font-extrabold";
+                        dot.querySelector('span').className = "w-6 h-6 rounded-full bg-vitto-500 text-white flex items-center justify-center text-xs mb-1";
+                    } else {
+                        dot.className = "flex flex-col items-center text-gray-400 font-normal";
+                        dot.querySelector('span').className = "w-6 h-6 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-xs mb-1";
+                    }
+                }
+            });
+
+            document.getElementById(`cart-step-${stepNum}`).classList.remove('hidden');
+
+            if (stepNum === 1) renderCartStep1();
+            if (stepNum === 2) renderCartStep2();
+            if (stepNum === 3) renderCartStep3();
+        }
+
+        function goToCheckoutStep(stepNum) {
+            if (appState.cart.length === 0 && stepNum > 1) {
+                showToast("السلة فارغة! قم بإضافة منتجات أولاً", "fa-exclamation-circle");
+                return;
+            }
+            renderCartStep(stepNum);
+        }
+
+        function renderCartStep1() {
+            const container = document.getElementById('cart-items-container');
+            if (!container) return;
+
+            if (appState.cart.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white p-8 rounded-2xl text-center space-y-3 border border-gray-100">
+                        <i class="fas fa-shopping-basket text-4xl text-gray-300"></i>
+                        <h3 class="font-extrabold text-sm text-gray-700">سلة التسوق فارغة</h3>
+                        <p class="text-xs text-gray-400">تصفح المنتجات وأضف ما يعجبك للسلة</p>
+                        <button onclick="switchTab('categories')" class="bg-vitto-500 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-md">تصفح الفئات</button>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = appState.cart.map(item => {
+                    const product = PRODUCTS.find(p => p.id === item.productId);
+                    if (!product) return '';
+                    return `
+                        <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3 space-x-reverse">
+                            <img src="${product.images[0]}" class="w-16 h-16 rounded-xl object-cover bg-gray-50">
+                            <div class="flex-1 space-y-1">
+                                <h4 class="text-xs font-bold text-gray-800 line-clamp-1">${product.name}</h4>
+                                <div class="text-xs font-black text-vitto-500">${formatPrice(product.price)}</div>
+                                
+                                <div class="flex items-center space-x-2 space-x-reverse pt-1">
+                                    <div class="flex items-center bg-gray-100 rounded-lg px-2">
+                                        <button onclick="updateCartQty(${product.id}, -1)" class="text-gray-700 font-bold px-1.5">-</button>
+                                        <span class="text-xs font-extrabold px-2">${item.qty}</span>
+                                        <button onclick="updateCartQty(${product.id}, 1)" class="text-gray-700 font-bold px-1.5">+</button>
+                                    </div>
+                                    <button onclick="removeCartItem(${product.id})" class="text-rose-500 text-xs hover:underline me-2"><i class="fas fa-trash-alt me-1"></i>حذف</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            recalculateCartTotals();
+        }
+
+        function updateCartQty(productId, delta) {
+            const item = appState.cart.find(i => i.productId === productId);
+            if (item) {
+                item.qty += delta;
+                if (item.qty <= 0) {
+                    removeCartItem(productId);
+                    return;
+                }
+            }
+            saveStateToStorage();
+            updateCartBadges();
+            renderCartStep1();
+        }
+
+        function removeCartItem(productId) {
+            appState.cart = appState.cart.filter(i => i.productId !== productId);
+            saveStateToStorage();
+            updateCartBadges();
+            renderCartStep1();
+            showToast("تم إزالة المنتج من السلة");
+        }
+
+        function applyDiscountCoupon() {
+            const codeInput = document.getElementById('coupon-code-input');
+            const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+
+            if (code === 'VITTO20') {
+                appState.activeCoupon = 'VITTO20';
+                showToast("تم تطبيق كود الخصم 20% بنجاح! 🎉");
+            } else if (code === 'FREESHIP') {
+                appState.activeCoupon = 'FREESHIP';
+                showToast("تم تطبيق كود الشحن المجاني! 🚚");
+            } else {
+                showToast("كود التخفيض غير صحيح أو منتهي الصلاحية", "fa-times-circle");
+                return;
+            }
+
+            recalculateCartTotals();
+        }
+
+        function calculateSubtotal() {
+            return appState.cart.reduce((sum, item) => {
+                const p = PRODUCTS.find(prod => prod.id === item.productId);
+                return sum + (p ? p.price * item.qty : 0);
+            }, 0);
+        }
+
+        function recalculateCartTotals() {
+            const subtotal = calculateSubtotal();
+            let discount = 0;
+            let shipping = 15000;
+
+            if (appState.activeCoupon === 'VITTO20') {
+                discount = Math.round(subtotal * 0.20);
+            } else if (appState.activeCoupon === 'FREESHIP') {
+                shipping = 0;
+            }
+
+            const grandTotal = Math.max(0, subtotal - discount + (appState.cart.length > 0 ? shipping : 0));
+
+            const subTotalEl = document.getElementById('summary-subtotal');
+            const discountEl = document.getElementById('summary-discount');
+            const grandTotalEl = document.getElementById('summary-grand-total');
+
+            if (subTotalEl) subTotalEl.innerText = formatPrice(subtotal);
+            if (discountEl) discountEl.innerText = discount > 0 ? `- ${formatPrice(discount)}` : '0 ل.س';
+            if (grandTotalEl) grandTotalEl.innerText = formatPrice(grandTotal);
+        }
+
+        function renderCartStep2() {
+            const container = document.getElementById('checkout-address-list');
+            if (!container) return;
+
+            if (appState.addresses.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-500">لا يوجد عناوين مسجلة. يرجى إضافة عنوان أولاً.</p>`;
+            } else {
+                container.innerHTML = appState.addresses.map((addr, idx) => `
+                    <label class="block border ${idx === 0 ? 'border-vitto-500 bg-orange-50/40' : 'border-gray-200'} p-3 rounded-xl cursor-pointer">
+                        <div class="flex items-start space-x-2 space-x-reverse">
+                            <input type="radio" name="checkout_addr" ${idx === 0 ? 'checked' : ''} class="mt-1 text-vitto-500 focus:ring-vitto-500">
+                            <div class="text-xs">
+                                <span class="font-extrabold text-gray-800 block">${addr.city} - ${addr.street}</span>
+                                <span class="text-gray-500 block">${addr.details}</span>
+                                <span class="text-gray-400 font-mono text-[10px] dir-ltr text-right block mt-0.5">${addr.phone}</span>
+                            </div>
+                        </div>
+                    </label>
+                `).join('');
+            }
+        }
+
+        function renderCartStep3() {
+            const subtotal = calculateSubtotal();
+            let discount = appState.activeCoupon === 'VITTO20' ? Math.round(subtotal * 0.20) : 0;
+            let shipping = appState.activeCoupon === 'FREESHIP' ? 0 : 15000;
+            const grandTotal = Math.max(0, subtotal - discount + shipping);
+
+            const finalTotalEl = document.getElementById('checkout-final-total');
+            if (finalTotalEl) finalTotalEl.innerText = formatPrice(grandTotal);
+        }
+
+        function placeFinalOrder() {
+            if (appState.cart.length === 0) return;
+
+            const agree = document.getElementById('agree-terms-check');
+            if (!agree || !agree.checked) {
+                showToast("يجب الموافقة على الشروط والأحكام لإتمام الشراء", "fa-exclamation-circle");
+                return;
+            }
+
+            const subtotal = calculateSubtotal();
+            let discount = appState.activeCoupon === 'VITTO20' ? Math.round(subtotal * 0.20) : 0;
+            let shipping = appState.activeCoupon === 'FREESHIP' ? 0 : 15000;
+            const grandTotal = Math.max(0, subtotal - discount + shipping);
+
+            const orderItems = appState.cart.map(item => {
+                const p = PRODUCTS.find(prod => prod.id === item.productId);
+                return {
+                    name: p ? p.name : "منتج",
+                    price: p ? p.price : 0,
+                    qty: item.qty,
+                    img: p ? p.images[0] : ''
+                };
+            });
+
+            const newOrder = {
+                id: "VTO-" + Math.floor(10000 + Math.random() * 90000),
+                date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                status: "قيد المعالجة",
+                statusBg: "bg-amber-100 text-amber-800",
+                items: orderItems,
+                total: grandTotal,
+                payment: "نقداً عند الاستلام"
+            };
+
+            appState.orders.unshift(newOrder);
+            appState.cart = []; // Reset Cart
+            saveStateToStorage();
+            updateCartBadges();
+
+            showToast("تم تسجيل وطلبك بنجاح! شكرًا لتسوقك من فيتو 🛍️");
+            openSubPage('orders');
+        }
+
+        /* ----------------------------------------------------
+           ACCOUNT & SUB-PAGES MANAGEMENT LOGIC
+           ---------------------------------------------------- */
+        function updateProfileUIDisplay() {
+            const nameEl = document.getElementById('account-user-fullname');
+            const phoneEl = document.getElementById('account-user-phone');
+            const avatarEl = document.getElementById('account-avatar-img');
+
+            if (nameEl) nameEl.innerText = `${appState.user.firstName} ${appState.user.lastName}`;
+            if (phoneEl) phoneEl.innerText = appState.user.phone;
+            if (avatarEl) avatarEl.src = appState.user.avatar;
+        }
+
+        function populateProfileForm() {
+            document.getElementById('input-first-name').value = appState.user.firstName;
+            document.getElementById('input-last-name').value = appState.user.lastName;
+            document.getElementById('input-phone').value = appState.user.phone;
+            document.getElementById('input-email').value = appState.user.email;
+            document.getElementById('input-dob').value = appState.user.dob;
+            document.getElementById('input-gender').value = appState.user.gender;
+            document.getElementById('form-avatar-preview').src = appState.user.avatar;
+        }
+
+        function saveProfileData(e) {
+            e.preventDefault();
+            appState.user.firstName = document.getElementById('input-first-name').value.trim();
+            appState.user.lastName = document.getElementById('input-last-name').value.trim();
+            appState.user.phone = document.getElementById('input-phone').value.trim();
+            appState.user.email = document.getElementById('input-email').value.trim();
+            appState.user.dob = document.getElementById('input-dob').value;
+            appState.user.gender = document.getElementById('input-gender').value;
+
+            saveStateToStorage();
+            updateProfileUIDisplay();
+            showToast("تم حفظ التغييرات على حسابك بنجاح");
+        }
+
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    appState.user.avatar = e.target.result;
+                    document.getElementById('form-avatar-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function renderOrdersList() {
+            const container = document.getElementById('orders-list-container');
+            if (!container) return;
+
+            if (appState.orders.length === 0) {
+                container.innerHTML = `<p class="text-center text-xs text-gray-400 py-10">لا يوجد طلبات سابقة حتى الآن</p>`;
+            } else {
+                container.innerHTML = appState.orders.map(o => `
+                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <div>
+                                <span class="text-xs font-black text-gray-800">رقم الطلب: ${o.id}</span>
+                                <span class="block text-[10px] text-gray-400">${o.date}</span>
+                            </div>
+                            <span class="${o.statusBg} text-[10px] font-bold px-2.5 py-1 rounded-full">${o.status}</span>
+                        </div>
+
+                        <div class="space-y-2">
+                            ${o.items.map(item => `
+                                <div class="flex items-center space-x-2 space-x-reverse text-xs">
+                                    <img src="${item.img}" class="w-10 h-10 rounded-lg object-cover">
+                                    <div class="flex-1">
+                                        <h5 class="font-bold text-gray-800 line-clamp-1">${item.name}</h5>
+                                        <span class="text-[10px] text-gray-500">الكمية: ${item.qty} × ${formatPrice(item.price)}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-2 flex justify-between items-center text-xs font-extrabold text-gray-900">
+                            <div>
+                                <span>طريقة الدفع:</span>
+                                <span class="text-gray-500 font-normal block text-[10px]">${o.payment}</span>
+                            </div>
+                            <div class="text-left">
+                                <span>المبلغ الكلي:</span>
+                                <span class="text-vitto-500 block text-sm">${formatPrice(o.total)}</span>
+                            </div>
+                        </div>
+
+                        <button onclick="showToast('تمت إعادة طلب المنتجات بنجاح!')" class="w-full bg-gray-100 hover:bg-orange-50 hover:text-vitto-500 text-gray-700 py-2 rounded-xl text-xs font-bold transition">
+                            إعادة طلب المشتريات
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderAddressesList() {
+            const container = document.getElementById('saved-addresses-container');
+            if (!container) return;
+
+            container.innerHTML = appState.addresses.map(addr => `
+                <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div class="space-y-1 text-xs">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-map-pin text-vitto-500"></i>
+                            <span class="font-extrabold text-gray-800">${addr.city} - ${addr.street}</span>
+                        </div>
+                        <p class="text-gray-500 text-[11px]">${addr.details}</p>
+                        <p class="text-gray-400 font-mono text-[10px] dir-ltr text-right">${addr.phone}</p>
+                    </div>
+                    <button onclick="removeAddress(${addr.id})" class="text-gray-300 hover:text-rose-500 text-sm p-2"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function openAddressModal() {
+            const modal = document.getElementById('address-modal');
+            if (modal) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modal.querySelector('div').classList.remove('scale-95');
+                modal.querySelector('div').classList.add('scale-100');
+            }
+        }
+
+        function closeAddressModal() {
+            const modal = document.getElementById('address-modal');
+            if (modal) {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modal.querySelector('div').classList.remove('scale-100');
+                modal.querySelector('div').classList.add('scale-95');
+            }
+        }
+
+        function saveNewAddress(e) {
+            e.preventDefault();
+            const city = document.getElementById('addr-city').value;
+            const street = document.getElementById('addr-street').value.trim();
+            const details = document.getElementById('addr-details').value.trim();
+            const phone = document.getElementById('addr-phone').value.trim();
+
+            appState.addresses.push({
+                id: Date.now(),
+                city, street, details, phone, isDefault: false
+            });
+
+            saveStateToStorage();
+            closeAddressModal();
+            renderAddressesList();
+            renderCartStep2();
+            showToast("تم إضافه العنوان الجديد بنجاح");
+        }
+
+        function removeAddress(id) {
+            appState.addresses = appState.addresses.filter(a => a.id !== id);
+            saveStateToStorage();
+            renderAddressesList();
+            renderCartStep2();
+            showToast("تم حذف العنوان");
+        }
+
+        function toggleWishlist(productId, event = null) {
+            if (event) event.stopPropagation();
+
+            const idx = appState.wishlist.indexOf(productId);
+            if (idx > -1) {
+                appState.wishlist.splice(idx, 1);
+                showToast("تم إزالة المنتج من المفضلة");
+            } else {
+                appState.wishlist.push(productId);
+                showToast("تم إضافه المنتج إلى المفضلة ❤️");
+            }
+
+            saveStateToStorage();
+
+            // Re-render current page cards if applicable
+            if (currentActiveTab === 'home') renderHomeSections();
+            if (currentActiveTab === 'categories') renderCategoriesGrid();
+            if (document.getElementById('page-wishlist') && !document.getElementById('page-wishlist').classList.contains('hidden')) {
+                renderWishlistGrid();
+            }
+        }
+
+        function renderWishlistGrid() {
+            const grid = document.getElementById('wishlist-grid');
+            if (!grid) return;
+
+            const favProducts = PRODUCTS.filter(p => appState.wishlist.includes(p.id));
+            if (favProducts.length === 0) {
+                grid.innerHTML = `<div class="col-span-2 text-center py-10 text-gray-400 text-xs">قائمة المفضلة فارغة حالياً</div>`;
+            } else {
+                grid.innerHTML = favProducts.map(p => generateProductCardHTML(p)).join('');
+            }
+        }
+
+        function copyCouponCode(code) {
+            const temp = document.createElement('textarea');
+            temp.value = code;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast(`تم نسخ الكود ${code} بنجاح!`);
+        }
+
+        function submitContactForm(e) {
+            e.preventDefault();
+            showToast("تم إرسال استفسارك إلى فريق الدعم بنجاح! سيتم الرد قريباً.");
+            document.getElementById('contact-message').value = "";
+        }
+
+        function openStaticPage(type) {
+            const titleEl = document.getElementById('static-page-title');
+            const contentEl = document.getElementById('static-page-content');
+
+            if (type === 'terms') {
+                titleEl.innerText = "الشروط والأحكام لمتجر فيتو";
+                contentEl.innerHTML = `
+                    <p>أهلاً بكم في متجر فيتو الإلكتروني. بشرائك وتصفحك للمتجر فإنك توافق على الالتزام بالشروط والضوابط التالية:</p>
+                    <ul class="list-disc pr-4 space-y-1">
+                        <li>جميع الأسعار الموضحة بالليرة السورية وتشمل الضرائب والرسوم المعمول بها.</li>
+                        <li>يتم تجهيز كافة الطلبيات خلال فترة 24 إلى 48 ساعة عمل.</li>
+                        <li>يحق للعميل إلغاء الطلب قبل تحويل الشحنة لشركة التوصيل.</li>
+                    </ul>
+                `;
+            } else {
+                titleEl.innerText = "سياسة الخصوصية وحماية البيانات";
+                contentEl.innerHTML = `
+                    <p>يلتزم متجر فيتو بحماية خصوصية بيانات المستخدمين بكافة أشكالها:</p>
+                    <ul class="list-disc pr-4 space-y-1">
+                        <li>نحن نستخدم بيانات العنوان ورقم الهاتف لتسليم الطلبات والتواصل فقط.</li>
+                        <li>لا يتم مشاركة أي معلوات شخصية مع طرف ثالث لأغراض إعلانية.</li>
+                        <li>كافة عمليات وتفاصيل المشتريات مشفرة وتتم بأعلى معايير الأمان.</li>
+                    </ul>
+                `;
+            }
+
+            openSubPage('static-text');
+        }
+
+        /* ----------------------------------------------------
+           DYNAMIC SEARCH HANDLER
+           ---------------------------------------------------- */
+        function handleSearch(query) {
+            const term = query.trim().toLowerCase();
+            if (term.length === 0) {
+                if (currentActiveTab === 'home') switchTab('home');
+                return;
+            }
+
+            const matches = PRODUCTS.filter(p => p.name.toLowerCase().includes(term) || p.description.toLowerCase().includes(term));
+            
+            const grid = document.getElementById('category-products-grid');
+            const titleEl = document.getElementById('current-category-title');
+            const countEl = document.getElementById('category-products-count');
+
+            if (titleEl) titleEl.innerText = `نتائج البحث عن: "${query}"`;
+            if (countEl) countEl.innerText = `${matches.length} نتيجة`;
+
+            if (grid) {
+                if (matches.length === 0) {
+                    grid.innerHTML = `<div class="col-span-2 text-center py-10 text-gray-400 text-xs">لا توجد منتجات تطابق كلمة البحث الحالية</div>`;
+                } else {
+                    grid.innerHTML = matches.map(p => generateProductCardHTML(p)).join('');
+                }
+            }
+
+            openSubPage('category-products');
+        }
+    </script>
+</body>
+</html>
+```
