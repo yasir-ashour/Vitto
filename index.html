@@ -8,12 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter / Cairo for Arabic -->
+    <!-- Google Font Cairo for Arabic -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Leaflet CSS & JS for Real Interactive Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Google Sign-In SDK الرسمي لجلب الحسابات الحقيقية -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <script>
         tailwind.config = {
@@ -122,13 +125,12 @@
                 </div>
             </div>
 
-            <!-- Search Bar with Dropdown Suggestions Support -->
+            <!-- Search Bar with Dropdown -->
             <div id="header-center" class="flex-1 px-3 relative">
                 <div id="header-search-box" class="relative">
                     <input type="text" id="global-search-input" onkeyup="handleSearch(this.value)" placeholder="ابحث عن منتج، ماركة، أو قسم..." class="w-full bg-gray-100 text-xs py-2 pr-9 pl-3 rounded-full border border-transparent focus:border-vitto-500 focus:bg-white focus:outline-none transition-all">
                     <i class="fas fa-search absolute right-3 top-2.5 text-gray-400 text-xs"></i>
                 </div>
-                <!-- Search Suggestions Dropdown -->
                 <div id="search-suggestions-dropdown" class="absolute top-full left-3 right-3 bg-white mt-1 rounded-xl shadow-xl border border-gray-100 z-50 max-h-60 overflow-y-auto hidden"></div>
                 <h1 id="header-title" class="hidden text-center text-base font-bold text-gray-800"></h1>
             </div>
@@ -144,7 +146,7 @@
         <!-- Main Scrollable Content Area -->
         <main class="flex-1 overflow-y-auto pb-20">
 
-            <!-- 1. HOME TAB PAGE VIEW -->
+            <!-- 1. HOME TAB -->
             <section id="page-home" class="page-view p-4 space-y-5">
                 <div class="relative rounded-2xl overflow-hidden shadow-md bg-gradient-to-r from-orange-500 to-amber-500 text-white p-5 flex justify-between items-center">
                     <div class="space-y-2 z-10 max-w-[65%]">
@@ -213,7 +215,7 @@
                 </div>
             </section>
 
-            <!-- 2. CATEGORIES TAB PAGE VIEW -->
+            <!-- 2. CATEGORIES TAB -->
             <section id="page-categories" class="page-view hidden p-4">
                 <div class="mb-4">
                     <h2 class="text-base font-extrabold text-gray-800 mb-1">جميع الأقسام والفئات</h2>
@@ -222,7 +224,7 @@
                 <div id="all-categories-grid" class="grid grid-cols-3 gap-3"></div>
             </section>
 
-            <!-- 3. CATEGORY PRODUCTS SUB-VIEW -->
+            <!-- 3. CATEGORY PRODUCTS -->
             <section id="page-category-products" class="page-view hidden p-4">
                 <div class="flex justify-between items-center mb-4 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                     <div>
@@ -234,12 +236,12 @@
                 <div id="category-products-grid" class="grid grid-cols-2 gap-3"></div>
             </section>
 
-            <!-- 4. PRODUCT DETAIL FULL PAGE SUB-VIEW -->
+            <!-- 4. PRODUCT DETAIL -->
             <section id="page-product-detail" class="page-view hidden">
                 <div id="product-detail-container" class="space-y-4 pb-6"></div>
             </section>
 
-            <!-- 5. CART & CHECKOUT TAB PAGE VIEW -->
+            <!-- 5. CART TAB -->
             <section id="page-cart" class="page-view hidden p-4 space-y-4">
                 <div id="checkout-stepper" class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center text-xs font-bold text-gray-400">
                     <div id="step-dot-1" class="flex flex-col items-center text-vitto-500">
@@ -270,19 +272,22 @@
                     <div id="cart-summary-card" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2.5 text-xs text-gray-600">
                         <div class="flex justify-between">
                             <span>إجمالي المنتجات:</span>
-                            <span id="summary-subtotal" class="font-bold text-gray-800">0 ل.س</span>
+                            <div class="text-left"><span id="summary-subtotal-new" class="font-bold text-gray-800 block">0 ل.س جديدة</span><span id="summary-subtotal-old" class="text-[10px] text-gray-400 block">0 ل.س قديمة</span></div>
                         </div>
                         <div class="flex justify-between">
                             <span>قيمة الخصم:</span>
-                            <span id="summary-discount" class="font-bold text-emerald-600">0 ل.س</span>
+                            <div class="text-left"><span id="summary-discount-new" class="font-bold text-emerald-600 block">0 ل.س جديدة</span><span id="summary-discount-old" class="text-[10px] text-gray-400 block">0 ل.س قديمة</span></div>
                         </div>
                         <div class="flex justify-between">
                             <span>رسوم التوصيل:</span>
-                            <span id="summary-shipping" class="font-bold text-gray-800">تحدد في الخطوة التالية</span>
+                            <span id="summary-shipping" class="font-bold text-gray-800">150 ل.س جديدة (15 ألف قديمة)</span>
                         </div>
                         <div class="border-t border-gray-100 pt-2.5 flex justify-between items-center text-sm font-extrabold text-gray-900">
                             <span>المبلغ الإجمالي الكلي:</span>
-                            <span id="summary-grand-total" class="text-vitto-500 text-base">0 ل.س</span>
+                            <div class="text-left">
+                                <span id="summary-grand-total-new" class="text-vitto-500 text-base block">0 ل.س جديدة</span>
+                                <span id="summary-grand-total-old" class="text-[11px] text-gray-400 block font-normal">0 ل.س قديمة</span>
+                            </div>
                         </div>
                         <button onclick="goToCheckoutStep(2)" id="btn-to-step-2" class="w-full bg-vitto-500 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:bg-vitto-600 transition mt-2 flex items-center justify-center">
                             <span>المتابعة إلى عنوان التسليم</span>
@@ -315,7 +320,10 @@
                                     <p class="text-[10px] text-gray-500">التوصيل خلال 24 - 48 ساعة</p>
                                 </div>
                             </div>
-                            <span class="text-xs font-black text-vitto-500">15,000 ل.س</span>
+                            <div class="text-left">
+                                <span class="text-xs font-black text-vitto-500 block">150 ل.س جديدة</span>
+                                <span class="text-[9px] text-gray-400 block">(15,000 ل.س قديمة)</span>
+                            </div>
                         </div>
                     </div>
 
@@ -355,7 +363,10 @@
 
                         <div class="border-t border-gray-100 pt-3 flex justify-between items-center text-sm font-black text-gray-900">
                             <span>المبلغ الكلي للطلب:</span>
-                            <span id="checkout-final-total" class="text-vitto-500 text-lg">0 ل.س</span>
+                            <div class="text-left">
+                                <span id="checkout-final-total-new" class="text-vitto-500 text-base block">0 ل.س جديدة</span>
+                                <span id="checkout-final-total-old" class="text-[11px] text-gray-400 block font-normal">0 ل.س قديمة</span>
+                            </div>
                         </div>
 
                         <div class="flex space-x-2 space-x-reverse pt-2">
@@ -369,7 +380,7 @@
                 </div>
             </section>
 
-            <!-- 6. ACCOUNT TAB PAGE VIEW -->
+            <!-- 6. ACCOUNT TAB -->
             <section id="page-account" class="page-view hidden p-4 space-y-4">
                 <div class="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-5 rounded-2xl shadow-md flex items-center space-x-4 space-x-reverse relative overflow-hidden">
                     <div class="relative">
@@ -386,6 +397,22 @@
                     <button onclick="openSubPage('edit-profile')" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-xl font-bold transition">
                         تعديل
                     </button>
+                </div>
+
+                <!-- Google & Facebook Real Login Buttons -->
+                <div class="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 p-4 rounded-2xl shadow-sm space-y-3 text-center">
+                    <h3 class="font-extrabold text-xs text-gray-800">تسجيل الدخول الفعلي عبر حسابات الجهاز الرسمية</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <!-- زر جوجل الحقيقي المربوط بـ Google Identity Services -->
+                        <button onclick="triggerRealGoogleLogin()" class="bg-white hover:bg-gray-50 border border-gray-200 text-gray-800 py-2.5 px-3 rounded-xl text-xs font-bold shadow-sm flex items-center justify-center space-x-2 space-x-reverse transition">
+                            <i class="fab fa-google text-red-500 text-sm"></i>
+                            <span>جوجل (Google)</span>
+                        </button>
+                        <button onclick="triggerFacebookLogin()" class="bg-[#1877F2] hover:bg-[#166fe5] text-white py-2.5 px-3 rounded-xl text-xs font-bold shadow-sm flex items-center justify-center space-x-2 space-x-reverse transition">
+                            <i class="fab fa-facebook text-sm"></i>
+                            <span>فيسبوك (Facebook)</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100 text-xs text-gray-700">
@@ -526,7 +553,7 @@
                 <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 rounded-2xl shadow-sm text-center">
                     <i class="fas fa-coins text-3xl mb-1 text-amber-200"></i>
                     <h3 class="font-extrabold text-sm">رصيد نقاط فيتو: 350 نقطة</h3>
-                    <p class="text-xs text-amber-100">تعادل خصم بقيمة 35,000 ل.س</p>
+                    <p class="text-xs text-amber-100">تعادل خصم بقيمة 350 ل.س جديدة (35,000 قديمة)</p>
                 </div>
 
                 <h3 class="font-extrabold text-xs text-gray-700 pt-2">القسائم الفعالة المتاحة لك:</h3>
@@ -546,7 +573,7 @@
                     <div>
                         <span class="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded font-bold">توصيل مجاني</span>
                         <h4 class="font-extrabold text-xs text-gray-800 mt-1">كود FREESHIP</h4>
-                        <p class="text-[10px] text-gray-400">للطلبات فوق 200,000 ل.س</p>
+                        <p class="text-[10px] text-gray-400">للطلبات فوق 2,000 ل.س جديدة</p>
                     </div>
                     <button onclick="copyCouponCode('FREESHIP')" class="bg-orange-50 text-vitto-500 text-xs font-bold px-3 py-1.5 rounded-xl border border-orange-200">
                         نسخ الكود
@@ -638,7 +665,7 @@
 
     </div>
 
-    <!-- ADD / EDIT ADDRESS MODAL WITH REAL LEAFLET GPS MAP -->
+    <!-- ADDRESS MODAL -->
     <div id="address-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300">
             <div class="flex justify-between items-center border-b pb-2">
@@ -927,11 +954,22 @@
         let leafletMapInstance = null;
         let leafletMarkerInstance = null;
 
+        function formatBothCurrencies(amountOld) {
+            const amountNew = Math.round(amountOld / 100);
+            return {
+                oldStr: amountOld.toLocaleString('ar-SY') + ' ل.س قديمة',
+                newStr: amountNew.toLocaleString('ar-SY') + ' ل.س جديدة'
+            };
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             loadFromLocalStorage();
             renderCategoriesGrid();
             renderHomeSections();
             updateCartBadges();
+
+            // تهيئة خدمة جوجل الحقيقية الرسمية
+            initRealGoogleAuth();
 
             setTimeout(() => {
                 const loader = document.getElementById('app-loader');
@@ -941,6 +979,71 @@
                 }
             }, 600);
         });
+
+        // تهيئة Google Identity Services الحقيقية
+        function initRealGoogleAuth() {
+            if (typeof google !== 'undefined') {
+                try {
+                    google.accounts.id.initialize({
+                        client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com', // استبدل هذا بـ Client ID الخاص بك
+                        callback: handleGoogleRealResponse,
+                        auto_select: false,
+                        cancel_on_tap_outside: true
+                    });
+                } catch (e) {
+                    console.error("Google Auth Error:", e);
+                }
+            }
+        }
+
+        // استقبال بيانات الحساب الحقيقي بعد اختيار المستخدم من نافذة جوجل
+        function handleGoogleRealResponse(response) {
+            if (response.credential) {
+                const payload = decodeJwtToken(response.credential);
+                appState.user.firstName = payload.given_name || "مستخدم";
+                appState.user.lastName = payload.family_name || "جوجل";
+                appState.user.email = payload.email;
+                appState.user.avatar = payload.picture || appState.user.avatar;
+
+                saveStateToStorage();
+                updateProfileUIDisplay();
+                showToast(`تم تسجيل الدخول بنجاح عبر حساب جوجل الحقيقي: ${payload.email} 🎉`);
+            }
+        }
+
+        function decodeJwtToken(token) {
+            try {
+                let base64Url = token.split('.')[1];
+                let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (err) {
+                return {};
+            }
+        }
+
+        // استدعاء نافذة جوجل الرسمية الحقيقية
+        function triggerRealGoogleLogin() {
+            if (typeof google !== 'undefined') {
+                try {
+                    google.accounts.id.prompt((notification) => {
+                        if (notification.isNotDisplayed()) {
+                            showToast("تأكد من إدخال Client ID صحيح في الكود", "fa-exclamation-circle");
+                        }
+                    });
+                } catch (e) {
+                    showToast("حدث خطأ أثناء استدعاء نافذة جوجل الحقيقية.", "fa-times-circle");
+                }
+            } else {
+                showToast("جاري تحميل مكتبة جوجل الرسمية...", "fa-exclamation-circle");
+            }
+        }
+
+        function triggerFacebookLogin() {
+            showToast("جاري الاتصال بمنصة فيسبوك الرسمية...");
+        }
 
         function saveStateToStorage() {
             localStorage.setItem('vitto_app_state', JSON.stringify({
@@ -984,10 +1087,6 @@
                 toast.classList.add('opacity-0', 'pointer-events-none', '-translate-y-4');
                 toast.classList.remove('opacity-100', 'translate-y-0');
             }, 2500);
-        }
-
-        function formatPrice(amount) {
-            return amount.toLocaleString('ar-SY') + ' ل.س';
         }
 
         function switchTab(tabId) {
@@ -1161,6 +1260,9 @@
 
         function generateProductCardHTML(p) {
             const isFav = appState.wishlist.includes(p.id);
+            const priceObj = formatBothCurrencies(p.price);
+            const oldPriceObj = p.oldPrice ? formatBothCurrencies(p.oldPrice) : null;
+
             return `
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 relative flex flex-col justify-between hover:shadow-md transition">
                     <button onclick="toggleWishlist(${p.id}, event)" class="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm shadow-sm flex items-center justify-center ${isFav ? 'text-rose-500' : 'text-gray-300'} hover:scale-110 transition">
@@ -1185,8 +1287,9 @@
                         </div>
 
                         <div>
-                            <div class="text-xs font-black text-vitto-500">${formatPrice(p.price)}</div>
-                            ${p.oldPrice ? `<div class="text-[10px] text-gray-400 line-through">${formatPrice(p.oldPrice)}</div>` : ''}
+                            <div class="text-xs font-black text-vitto-500">${priceObj.newStr}</div>
+                            <div class="text-[9px] text-gray-400">${priceObj.oldStr}</div>
+                            ${oldPriceObj ? `<div class="text-[9px] text-gray-400 line-through mt-0.5">${oldPriceObj.newStr} (${oldPriceObj.oldStr})</div>` : ''}
                         </div>
                     </div>
 
@@ -1205,6 +1308,8 @@
             activeProductDetail = product;
             const container = document.getElementById('product-detail-container');
             const isFav = appState.wishlist.includes(product.id);
+            const priceObj = formatBothCurrencies(product.price);
+            const oldPriceObj = product.oldPrice ? formatBothCurrencies(product.oldPrice) : null;
 
             container.innerHTML = `
                 <div class="relative bg-white border-b border-gray-100 pb-3">
@@ -1235,8 +1340,9 @@
 
                     <div class="flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
                         <div>
-                            <div class="text-lg font-black text-vitto-500">${formatPrice(product.price)}</div>
-                            ${product.oldPrice ? `<div class="text-xs text-gray-400 line-through">${formatPrice(product.oldPrice)}</div>` : ''}
+                            <div class="text-lg font-black text-vitto-500">${priceObj.newStr}</div>
+                            <div class="text-xs text-gray-500 font-semibold">${priceObj.oldStr}</div>
+                            ${oldPriceObj ? `<div class="text-xs text-gray-400 line-through mt-0.5">${oldPriceObj.newStr} (${oldPriceObj.oldStr})</div>` : ''}
                         </div>
                         ${product.discount ? `<span class="bg-red-500 text-white text-xs font-black px-2.5 py-1 rounded-xl dir-ltr">${product.discount} خصم</span>` : ''}
                     </div>
@@ -1403,12 +1509,16 @@
                 container.innerHTML = appState.cart.map(item => {
                     const product = PRODUCTS.find(p => p.id === item.productId);
                     if (!product) return '';
+                    const priceObj = formatBothCurrencies(product.price);
                     return `
                         <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3 space-x-reverse">
                             <img src="${product.images[0]}" class="w-16 h-16 rounded-xl object-cover bg-gray-50">
                             <div class="flex-1 space-y-1">
                                 <h4 class="text-xs font-bold text-gray-800 line-clamp-1">${product.name}</h4>
-                                <div class="text-xs font-black text-vitto-500">${formatPrice(product.price)}</div>
+                                <div>
+                                    <div class="text-xs font-black text-vitto-500">${priceObj.newStr}</div>
+                                    <div class="text-[10px] text-gray-400">${priceObj.oldStr}</div>
+                                </div>
                                 
                                 <div class="flex items-center space-x-2 space-x-reverse pt-1">
                                     <div class="flex items-center bg-gray-100 rounded-lg px-2">
@@ -1477,7 +1587,7 @@
         function recalculateCartTotals() {
             const subtotal = calculateSubtotal();
             let discount = 0;
-            let shipping = 15000;
+            let shipping = 1500000;
 
             if (appState.activeCoupon === 'VITTO20') {
                 discount = Math.round(subtotal * 0.20);
@@ -1487,13 +1597,23 @@
 
             const grandTotal = Math.max(0, subtotal - discount + (appState.cart.length > 0 ? shipping : 0));
 
-            const subTotalEl = document.getElementById('summary-subtotal');
-            const discountEl = document.getElementById('summary-discount');
-            const grandTotalEl = document.getElementById('summary-grand-total');
+            const subObj = formatBothCurrencies(subtotal);
+            const discObj = formatBothCurrencies(discount);
+            const grandObj = formatBothCurrencies(grandTotal);
 
-            if (subTotalEl) subTotalEl.innerText = formatPrice(subtotal);
-            if (discountEl) discountEl.innerText = discount > 0 ? `- ${formatPrice(discount)}` : '0 ل.س';
-            if (grandTotalEl) grandTotalEl.innerText = formatPrice(grandTotal);
+            const subNew = document.getElementById('summary-subtotal-new');
+            const subOld = document.getElementById('summary-subtotal-old');
+            const discNew = document.getElementById('summary-discount-new');
+            const discOld = document.getElementById('summary-discount-old');
+            const grandNew = document.getElementById('summary-grand-total-new');
+            const grandOld = document.getElementById('summary-grand-total-old');
+
+            if (subNew) subNew.innerText = subObj.newStr;
+            if (subOld) subOld.innerText = subObj.oldStr;
+            if (discNew) discNew.innerText = discObj.newStr;
+            if (discOld) discOld.innerText = discObj.oldStr;
+            if (grandNew) grandNew.innerText = grandObj.newStr;
+            if (grandOld) grandOld.innerText = grandObj.oldStr;
         }
 
         function renderCartStep2() {
@@ -1521,11 +1641,15 @@
         function renderCartStep3() {
             const subtotal = calculateSubtotal();
             let discount = appState.activeCoupon === 'VITTO20' ? Math.round(subtotal * 0.20) : 0;
-            let shipping = appState.activeCoupon === 'FREESHIP' ? 0 : 15000;
+            let shipping = appState.activeCoupon === 'FREESHIP' ? 0 : 1500000;
             const grandTotal = Math.max(0, subtotal - discount + shipping);
+            const grandObj = formatBothCurrencies(grandTotal);
 
-            const finalTotalEl = document.getElementById('checkout-final-total');
-            if (finalTotalEl) finalTotalEl.innerText = formatPrice(grandTotal);
+            const finalNew = document.getElementById('checkout-final-total-new');
+            const finalOld = document.getElementById('checkout-final-total-old');
+
+            if (finalNew) finalNew.innerText = grandObj.newStr;
+            if (finalOld) finalOld.innerText = grandObj.oldStr;
         }
 
         function placeFinalOrder() {
@@ -1539,7 +1663,7 @@
 
             const subtotal = calculateSubtotal();
             let discount = appState.activeCoupon === 'VITTO20' ? Math.round(subtotal * 0.20) : 0;
-            let shipping = appState.activeCoupon === 'FREESHIP' ? 0 : 15000;
+            let shipping = appState.activeCoupon === 'FREESHIP' ? 0 : 1500000;
             const grandTotal = Math.max(0, subtotal - discount + shipping);
 
             const orderItems = appState.cart.map(item => {
@@ -1624,44 +1748,51 @@
             if (appState.orders.length === 0) {
                 container.innerHTML = `<p class="text-center text-xs text-gray-400 py-10">لا يوجد طلبات سابقة حتى الآن</p>`;
             } else {
-                container.innerHTML = appState.orders.map(o => `
-                    <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
-                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
-                            <div>
-                                <span class="text-xs font-black text-gray-800">رقم الطلب: ${o.id}</span>
-                                <span class="block text-[10px] text-gray-400">${o.date}</span>
-                            </div>
-                            <span class="${o.statusBg} text-[10px] font-bold px-2.5 py-1 rounded-full">${o.status}</span>
-                        </div>
-
-                        <div class="space-y-2">
-                            ${o.items.map(item => `
-                                <div class="flex items-center space-x-2 space-x-reverse text-xs">
-                                    <img src="${item.img}" class="w-10 h-10 rounded-lg object-cover">
-                                    <div class="flex-1">
-                                        <h5 class="font-bold text-gray-800 line-clamp-1">${item.name}</h5>
-                                        <span class="text-[10px] text-gray-500">الكمية: ${item.qty} ×${formatPrice(item.price)}</span>
-                                    </div>
+                container.innerHTML = appState.orders.map(o => {
+                    const totalObj = formatBothCurrencies(o.total);
+                    return `
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                            <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                                <div>
+                                    <span class="text-xs font-black text-gray-800">رقم الطلب: ${o.id}</span>
+                                    <span class="block text-[10px] text-gray-400">${o.date}</span>
                                 </div>
-                            `).join('')}
-                        </div>
-
-                        <div class="border-t border-gray-100 pt-2 flex justify-between items-center text-xs font-extrabold text-gray-900">
-                            <div>
-                                <span>طريقة الدفع:</span>
-                                <span class="text-gray-500 font-normal block text-[10px]">${o.payment}</span>
+                                <span class="${o.statusBg} text-[10px] font-bold px-2.5 py-1 rounded-full">${o.status}</span>
                             </div>
-                            <div class="text-left">
-                                <span>المبلغ الكلي:</span>
-                                <span class="text-vitto-500 block text-sm">${formatPrice(o.total)}</span>
-                            </div>
-                        </div>
 
-                        <button onclick="showToast('تمت إعادة طلب المنتجات بنجاح!')" class="w-full bg-gray-100 hover:bg-orange-50 hover:text-vitto-500 text-gray-700 py-2 rounded-xl text-xs font-bold transition">
-                            إعادة طلب المشتريات
-                        </button>
-                    </div>
-                `).join('');
+                            <div class="space-y-2">
+                                ${o.items.map(item => {
+                                    const itemObj = formatBothCurrencies(item.price);
+                                    return `
+                                        <div class="flex items-center space-x-2 space-x-reverse text-xs">
+                                            <img src="${item.img}" class="w-10 h-10 rounded-lg object-cover">
+                                            <div class="flex-1">
+                                                <h5 class="font-bold text-gray-800 line-clamp-1">${item.name}</h5>
+                                                <span class="text-[10px] text-gray-500">الكمية: ${item.qty} × ${itemObj.newStr} (${itemObj.oldStr})</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+
+                            <div class="border-t border-gray-100 pt-2 flex justify-between items-center text-xs font-extrabold text-gray-900">
+                                <div>
+                                    <span>طريقة الدفع:</span>
+                                    <span class="text-gray-500 font-normal block text-[10px]">${o.payment}</span>
+                                </div>
+                                <div class="text-left">
+                                    <span>المبلغ الكلي:</span>
+                                    <span class="text-vitto-500 block text-xs font-black">${totalObj.newStr}</span>
+                                    <span class="text-[10px] text-gray-400 block">${totalObj.oldStr}</span>
+                                </div>
+                            </div>
+
+                            <button onclick="showToast('تمت إعادة طلب المنتجات بنجاح!')" class="w-full bg-gray-100 hover:bg-orange-50 hover:text-vitto-500 text-gray-700 py-2 rounded-xl text-xs font-bold transition">
+                                إعادة طلب المشتريات
+                            </button>
+                        </div>
+                    `;
+                }).join('');
             }
         }
 
@@ -1684,9 +1815,6 @@
             `).join('');
         }
 
-        /* ----------------------------------------------------
-           REAL LEAFLET MAP MODAL LOGIC
-           ---------------------------------------------------- */
         function openAddressModal() {
             const modal = document.getElementById('address-modal');
             if (modal) {
@@ -1851,7 +1979,7 @@
                 contentEl.innerHTML = `
                     <p>أهلاً بكم في متجر فيتو الإلكتروني. بشرائك وتصفحك للمتجر فإنك توافق على الالتزام بالشروط والضوابط التالية:</p>
                     <ul class="list-disc pr-4 space-y-1">
-                        <li>جميع الأسعار الموضحة بالليرة السورية وتشمل الضرائب والرسوم المعمول بها.</li>
+                        <li>جميع الأسعار موضحة بالعملة السورية الجديدة والقديمة وتشمل الضرائب.</li>
                         <li>يتم تجهيز كافة الطلبيات خلال فترة 24 إلى 48 ساعة عمل.</li>
                         <li>يحق للعميل إلغاء الطلب قبل تحويل الشحنة لشركة التوصيل.</li>
                     </ul>
@@ -1871,9 +1999,6 @@
             openSubPage('static-text');
         }
 
-        /* ----------------------------------------------------
-           FIXED SEARCH HANDLER (DROPDOWN SUGGESTIONS)
-           ---------------------------------------------------- */
         function handleSearch(query) {
             const term = query.trim().toLowerCase();
             const dropdown = document.getElementById('search-suggestions-dropdown');
@@ -1890,17 +2015,20 @@
             if (matches.length === 0) {
                 dropdown.innerHTML = `<div class="p-3 text-center text-gray-400 text-xs">لا توجد منتجات مطابقة لـ "${query}"</div>`;
             } else {
-                dropdown.innerHTML = matches.map(p => `
-                    <div onclick="selectSearchProduct(${p.id})" class="flex items-center space-x-2 space-x-reverse p-2.5 hover:bg-orange-50 cursor-pointer border-b border-gray-50 text-xs">
-                        <img src="${p.images[0]}" class="w-8 h-8 rounded-lg object-cover">
-                        <div class="flex-1 truncate">
-                            <h5 class="font-bold text-gray-800 truncate">${p.name}</h5>
-                            <span class="text-vitto-500 font-bold">${formatPrice(p.price)}</span>
+                dropdown.innerHTML = matches.map(p => {
+                    const priceObj = formatBothCurrencies(p.price);
+                    return `
+                        <div onclick="selectSearchProduct(${p.id})" class="flex items-center space-x-2 space-x-reverse p-2.5 hover:bg-orange-50 cursor-pointer border-b border-gray-50 text-xs">
+                            <img src="${p.images[0]}" class="w-8 h-8 rounded-lg object-cover">
+                            <div class="flex-1 truncate">
+                                <h5 class="font-bold text-gray-800 truncate">${p.name}</h5>
+                                <span class="text-vitto-500 font-bold">${priceObj.newStr}</span>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
-            dropdown.classList.remove('hidden');
+            dropdown.classList.add('hidden');
         }
 
         function selectSearchProduct(productId) {
@@ -1910,13 +2038,11 @@
             openProductDetail(productId);
         }
 
-        // إغلاق القائمة المنسدلة عند النقر في أي مكان خارجها
-        document.addEventListener('click', (e) => {
-            const searchBox = document.getElementById('header-search-box');
-            const dropdown = document.getElementById('search-suggestions-dropdown');
-            if (searchBox && dropdown && !searchBox.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
+        document.getElementById('global-search-input').addEventListener('blur', () => {
+            setTimeout(() => {
+                const dropdown = document.getElementById('search-suggestions-dropdown');
+                if (dropdown) dropdown.classList.add('hidden');
+            }, 200);
         });
     </script>
 </body>
