@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -12,6 +11,10 @@
     <!-- Google Font Inter / Cairo for Arabic -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
+    <!-- Leaflet CSS & JS for Real Interactive Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -20,7 +23,7 @@
                         vitto: {
                             50: '#fff5f0',
                             100: '#ffe8db',
-                            500: '#ff5000', // Brand Primary Orange
+                            500: '#ff5000',
                             600: '#e04600',
                             700: '#b83800',
                             dark: '#1e2022'
@@ -45,7 +48,6 @@
             color: #2d3748;
             user-select: none;
         }
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px;
@@ -64,16 +66,13 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        /* Smooth tab animation */
         .page-view {
             transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
-        /* Glassmorphism effects */
         .glass-nav {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(8px);
         }
-        /* Pulse dot for status */
         .pulse-dot {
             box-shadow: 0 0 0 0 rgba(255, 80, 0, 0.7);
             animation: pulse 1.6s infinite;
@@ -82,6 +81,12 @@
             0% { box-shadow: 0 0 0 0 rgba(255, 80, 0, 0.6); }
             70% { box-shadow: 0 0 0 8px rgba(255, 80, 0, 0); }
             100% { box-shadow: 0 0 0 0 rgba(255, 80, 0, 0); }
+        }
+        #leaflet-modal-map {
+            width: 100%;
+            height: 180px;
+            border-radius: 0.75rem;
+            z-index: 10;
         }
     </style>
 </head>
@@ -105,7 +110,7 @@
     <!-- Application Main Wrapper -->
     <div class="max-w-md mx-auto bg-white min-h-screen shadow-xl relative overflow-hidden flex flex-col">
 
-        <!-- Top Header Bar (Global Dynamic) -->
+        <!-- Top Header Bar -->
         <header id="main-header" class="sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shadow-sm">
             <div class="flex items-center space-x-3 space-x-reverse">
                 <button id="header-back-btn" onclick="goBack()" class="hidden text-gray-700 hover:text-vitto-500 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
@@ -117,12 +122,14 @@
                 </div>
             </div>
 
-            <!-- Dynamic Header Title / Search -->
-            <div id="header-center" class="flex-1 px-3">
+            <!-- Search Bar with Dropdown Suggestions Support -->
+            <div id="header-center" class="flex-1 px-3 relative">
                 <div id="header-search-box" class="relative">
                     <input type="text" id="global-search-input" onkeyup="handleSearch(this.value)" placeholder="ابحث عن منتج، ماركة، أو قسم..." class="w-full bg-gray-100 text-xs py-2 pr-9 pl-3 rounded-full border border-transparent focus:border-vitto-500 focus:bg-white focus:outline-none transition-all">
                     <i class="fas fa-search absolute right-3 top-2.5 text-gray-400 text-xs"></i>
                 </div>
+                <!-- Search Suggestions Dropdown -->
+                <div id="search-suggestions-dropdown" class="absolute top-full left-3 right-3 bg-white mt-1 rounded-xl shadow-xl border border-gray-100 z-50 max-h-60 overflow-y-auto hidden"></div>
                 <h1 id="header-title" class="hidden text-center text-base font-bold text-gray-800"></h1>
             </div>
 
@@ -139,7 +146,6 @@
 
             <!-- 1. HOME TAB PAGE VIEW -->
             <section id="page-home" class="page-view p-4 space-y-5">
-                <!-- Promo Banner Carousel -->
                 <div class="relative rounded-2xl overflow-hidden shadow-md bg-gradient-to-r from-orange-500 to-amber-500 text-white p-5 flex justify-between items-center">
                     <div class="space-y-2 z-10 max-w-[65%]">
                         <span class="bg-white/20 text-white text-xs px-2.5 py-1 rounded-full font-bold">عروض الموسم 💥</span>
@@ -152,7 +158,6 @@
                     </div>
                 </div>
 
-                <!-- Fast Features Row -->
                 <div class="grid grid-cols-4 gap-2 text-center py-2 bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
                     <div class="flex flex-col items-center">
                         <div class="w-10 h-10 rounded-full bg-orange-50 text-vitto-500 flex items-center justify-center mb-1 text-base"><i class="fas fa-truck-fast"></i></div>
@@ -172,18 +177,14 @@
                     </div>
                 </div>
 
-                <!-- Popular Categories Slider -->
                 <div>
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="font-extrabold text-gray-800 text-sm">الفئات الشائعة</h3>
                         <button onclick="switchTab('categories')" class="text-xs font-bold text-vitto-500 hover:underline">عرض الكل <i class="fas fa-chevron-left text-[10px]"></i></button>
                     </div>
-                    <div id="home-categories-list" class="flex space-x-3 space-x-reverse overflow-x-auto hide-scrollbar pb-1">
-                        <!-- Dynamic Populated -->
-                    </div>
+                    <div id="home-categories-list" class="flex space-x-3 space-x-reverse overflow-x-auto hide-scrollbar pb-1"></div>
                 </div>
 
-                <!-- Flash Deals Section -->
                 <div class="bg-orange-50/70 p-3.5 rounded-2xl border border-orange-100">
                     <div class="flex justify-between items-center mb-3">
                         <div class="flex items-center space-x-2 space-x-reverse">
@@ -194,29 +195,21 @@
                             <span id="countdown-timer">05:42:19</span>
                         </div>
                     </div>
-                    <div id="flash-deals-grid" class="grid grid-cols-2 gap-3">
-                        <!-- Flash deal items dynamically added -->
-                    </div>
+                    <div id="flash-deals-grid" class="grid grid-cols-2 gap-3"></div>
                 </div>
 
-                <!-- New Arrivals Grid -->
                 <div>
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-extrabold text-gray-800 text-sm">أحدث المنتجاتوصلت حديثاً 🔥</h3>
+                        <h3 class="font-extrabold text-gray-800 text-sm">أحدث المنتجات وصلت حديثاً 🔥</h3>
                     </div>
-                    <div id="new-arrivals-grid" class="grid grid-cols-2 gap-3">
-                        <!-- Dynamic Items -->
-                    </div>
+                    <div id="new-arrivals-grid" class="grid grid-cols-2 gap-3"></div>
                 </div>
 
-                <!-- Best Sellers Grid -->
                 <div>
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="font-extrabold text-gray-800 text-sm">الأكثر مبيعاً ⭐</h3>
                     </div>
-                    <div id="best-sellers-grid" class="grid grid-cols-2 gap-3">
-                        <!-- Dynamic Items -->
-                    </div>
+                    <div id="best-sellers-grid" class="grid grid-cols-2 gap-3"></div>
                 </div>
             </section>
 
@@ -226,9 +219,7 @@
                     <h2 class="text-base font-extrabold text-gray-800 mb-1">جميع الأقسام والفئات</h2>
                     <p class="text-xs text-gray-500">اختر قسم لتصفح أفضل المنتجات المتوفرة في فيتو</p>
                 </div>
-                <div id="all-categories-grid" class="grid grid-cols-3 gap-3">
-                    <!-- 30+ Categories dynamically rendered here -->
-                </div>
+                <div id="all-categories-grid" class="grid grid-cols-3 gap-3"></div>
             </section>
 
             <!-- 3. CATEGORY PRODUCTS SUB-VIEW -->
@@ -240,21 +231,16 @@
                     </div>
                     <span id="category-products-count" class="bg-orange-100 text-vitto-500 text-xs px-2.5 py-1 rounded-full font-bold">0 منتج</span>
                 </div>
-                <div id="category-products-grid" class="grid grid-cols-2 gap-3">
-                    <!-- Dynamically filled -->
-                </div>
+                <div id="category-products-grid" class="grid grid-cols-2 gap-3"></div>
             </section>
 
             <!-- 4. PRODUCT DETAIL FULL PAGE SUB-VIEW -->
             <section id="page-product-detail" class="page-view hidden">
-                <div id="product-detail-container" class="space-y-4 pb-6">
-                    <!-- Dynamic details loaded here -->
-                </div>
+                <div id="product-detail-container" class="space-y-4 pb-6"></div>
             </section>
 
             <!-- 5. CART & CHECKOUT TAB PAGE VIEW -->
             <section id="page-cart" class="page-view hidden p-4 space-y-4">
-                <!-- Cart Header / Stepper -->
                 <div id="checkout-stepper" class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center text-xs font-bold text-gray-400">
                     <div id="step-dot-1" class="flex flex-col items-center text-vitto-500">
                         <span class="w-6 h-6 rounded-full bg-vitto-500 text-white flex items-center justify-center text-xs mb-1">1</span>
@@ -272,20 +258,15 @@
                     </div>
                 </div>
 
-                <!-- STEP 1: CART ITEMS LIST -->
                 <div id="cart-step-1" class="space-y-3">
-                    <div id="cart-items-container" class="space-y-3">
-                        <!-- Dynamic items -->
-                    </div>
+                    <div id="cart-items-container" class="space-y-3"></div>
 
-                    <!-- Discount Coupon Input Box -->
                     <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-2 space-x-reverse">
                         <i class="fas fa-ticket-alt text-vitto-500 text-lg"></i>
                         <input type="text" id="coupon-code-input" placeholder="أدخل كود التخفيض (مثلاً: VITTO20)" class="flex-1 bg-gray-50 text-xs py-2 px-3 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500 font-mono">
                         <button onclick="applyDiscountCoupon()" class="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-vitto-500 transition">تطبيق</button>
                     </div>
 
-                    <!-- Order Total Summary Card -->
                     <div id="cart-summary-card" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2.5 text-xs text-gray-600">
                         <div class="flex justify-between">
                             <span>إجمالي المنتجات:</span>
@@ -310,25 +291,18 @@
                     </div>
                 </div>
 
-                <!-- STEP 2: ADDRESS & DELIVERY SELECTION -->
                 <div id="cart-step-2" class="hidden space-y-4">
                     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
                         <h3 class="font-extrabold text-sm text-gray-800 flex items-center">
                             <i class="fas fa-map-marker-alt text-vitto-500 me-2"></i> اختيار عنوان التسليم
                         </h3>
-                        
-                        <!-- Saved Address Cards Select -->
-                        <div id="checkout-address-list" class="space-y-2">
-                            <!-- Dynamic saved addresses list with radio selection -->
-                        </div>
-
+                        <div id="checkout-address-list" class="space-y-2"></div>
                         <button onclick="openAddressModal()" class="w-full py-2.5 border-2 border-dashed border-gray-300 hover:border-vitto-500 rounded-xl text-xs font-bold text-gray-600 flex items-center justify-center space-x-1 space-x-reverse">
                             <i class="fas fa-plus text-vitto-500"></i>
-                            <span>إضافة عنوان جديد جديد على الخريطة</span>
+                            <span>إضافة عنوان جديد على الخريطة</span>
                         </button>
                     </div>
 
-                    <!-- Shipping Method Accordion -->
                     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
                         <h3 class="font-extrabold text-sm text-gray-800 flex items-center">
                             <i class="fas fa-truck text-vitto-500 me-2"></i> طريقة الشحن والتوصيل
@@ -351,9 +325,7 @@
                     </div>
                 </div>
 
-                <!-- STEP 3: PAYMENT METHOD & FINAL ORDER PLACEMENT -->
                 <div id="cart-step-3" class="hidden space-y-4">
-                    <!-- Payment Methods -->
                     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
                         <h3 class="font-extrabold text-sm text-gray-800 flex items-center">
                             <i class="fas fa-wallet text-vitto-500 me-2"></i> طريقة الدفع المحددة
@@ -370,13 +342,11 @@
                         </div>
                     </div>
 
-                    <!-- Notes Message to Merchant -->
                     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2">
                         <label class="block text-xs font-bold text-gray-700">اترك رسالة أو ملاحظات للشحن (اختياري)</label>
                         <textarea id="order-notes-input" rows="2" placeholder="مثال: يرجى الاتصال قبل الوصول بـ 10 دقائق..." class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500"></textarea>
                     </div>
 
-                    <!-- Terms Checkbox & Place Order Button -->
                     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
                         <label class="flex items-start space-x-2 space-x-reverse cursor-pointer">
                             <input type="checkbox" id="agree-terms-check" checked class="mt-0.5 rounded text-vitto-500 focus:ring-vitto-500">
@@ -401,7 +371,6 @@
 
             <!-- 6. ACCOUNT TAB PAGE VIEW -->
             <section id="page-account" class="page-view hidden p-4 space-y-4">
-                <!-- User Profile Header Card -->
                 <div class="bg-gradient-to-r from-gray-900 to-gray-800 text-white p-5 rounded-2xl shadow-md flex items-center space-x-4 space-x-reverse relative overflow-hidden">
                     <div class="relative">
                         <img id="account-avatar-img" src="https://placehold.co/150x150/ff5000/ffffff?text=YA" class="w-16 h-16 rounded-full border-2 border-vitto-500 object-cover">
@@ -419,7 +388,6 @@
                     </button>
                 </div>
 
-                <!-- Navigation List Options -->
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100 text-xs text-gray-700">
                     <button onclick="openSubPage('orders')" class="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition">
                         <div class="flex items-center space-x-3 space-x-reverse">
@@ -529,16 +497,14 @@
                     </div>
 
                     <button type="submit" class="w-full bg-vitto-500 text-white py-3 rounded-xl font-bold text-xs shadow-md hover:bg-vitto-600 transition">
-                        حفظ التغيرات
+                        حفظ التغييرات
                     </button>
                 </form>
             </section>
 
             <!-- 8. SUB-PAGE: MY ORDERS -->
             <section id="page-orders" class="page-view hidden p-4 space-y-3">
-                <div id="orders-list-container" class="space-y-3">
-                    <!-- Dynamic Orders Items -->
-                </div>
+                <div id="orders-list-container" class="space-y-3"></div>
             </section>
 
             <!-- 9. SUB-PAGE: MY ADDRESSES -->
@@ -547,16 +513,12 @@
                     <i class="fas fa-plus-circle"></i>
                     <span>إضافة عنوان توصيل جديد</span>
                 </button>
-                <div id="saved-addresses-container" class="space-y-3">
-                    <!-- Address items rendered dynamically -->
-                </div>
+                <div id="saved-addresses-container" class="space-y-3"></div>
             </section>
 
             <!-- 10. SUB-PAGE: WISHLIST -->
             <section id="page-wishlist" class="page-view hidden p-4">
-                <div id="wishlist-grid" class="grid grid-cols-2 gap-3">
-                    <!-- Dynamically filled favorite items -->
-                </div>
+                <div id="wishlist-grid" class="grid grid-cols-2 gap-3"></div>
             </section>
 
             <!-- 11. SUB-PAGE: REWARDS & COUPONS -->
@@ -594,7 +556,6 @@
 
             <!-- 12. SUB-PAGE: CONTACT US -->
             <section id="page-contact" class="page-view hidden p-4 space-y-4">
-                <!-- Store Quick Contact info -->
                 <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2 text-xs">
                     <h3 class="font-extrabold text-sm text-gray-800 mb-2 border-b border-gray-100 pb-2">معلومات التواصل والمقر</h3>
                     <div class="flex items-start space-x-2 space-x-reverse text-gray-600">
@@ -611,7 +572,6 @@
                     </div>
                 </div>
 
-                <!-- Contact Form -->
                 <form onsubmit="submitContactForm(event)" class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
                     <h3 class="font-extrabold text-sm text-gray-800">إرسال استفسار أو رسالة</h3>
                     
@@ -678,21 +638,19 @@
 
     </div>
 
-    <!-- ADD / EDIT ADDRESS MODAL -->
+    <!-- ADD / EDIT ADDRESS MODAL WITH REAL LEAFLET GPS MAP -->
     <div id="address-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-white w-full max-w-md rounded-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto transform scale-95 transition-transform duration-300">
             <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-extrabold text-sm text-gray-800">تحديد موقع عنوان جديد</h3>
+                <h3 class="font-extrabold text-sm text-gray-800">تحديد موقع عنوان جديد عبر الخريطة</h3>
                 <button onclick="closeAddressModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-base"></i></button>
             </div>
 
-            <!-- Interactive GPS Map simulation canvas -->
-            <div class="relative w-full h-40 bg-slate-200 rounded-xl overflow-hidden border border-gray-300 flex items-center justify-center">
-                <div class="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:12px_12px] opacity-70"></div>
-                <div class="text-center z-10">
-                    <i class="fas fa-map-marker-alt text-vitto-500 text-3xl animate-bounce"></i>
-                    <p class="text-[10px] font-bold text-gray-700 bg-white/90 px-2 py-1 rounded-full shadow-sm mt-1">تم تحديد الموقع عبر الخريطة</p>
-                </div>
+            <div class="relative w-full bg-slate-100 rounded-xl overflow-hidden border border-gray-300">
+                <div id="leaflet-modal-map"></div>
+                <button type="button" onclick="getRealGPSLocation()" class="absolute bottom-2 left-2 z-20 bg-white hover:bg-gray-100 text-gray-800 px-3 py-1.5 rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition">
+                    <i class="fas fa-crosshairs text-vitto-500"></i> موقعي الحالي (GPS)
+                </button>
             </div>
 
             <form onsubmit="saveNewAddress(event)" class="space-y-3">
@@ -711,7 +669,7 @@
                     <input type="text" id="addr-street" placeholder="مثال: قدسيا - ضاحية خلف التيم سنتر" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">تفاصيل البناية / الطابق / الشقة</label>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">تفاصيل البناية / الطابق / الإحداثيات</label>
                     <input type="text" id="addr-details" placeholder="مثال: بناية الياسمين - الطابق الثاني - شقة 4" required class="w-full text-xs p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500">
                 </div>
                 <div>
@@ -727,11 +685,6 @@
     </div>
 
     <script>
-        /* ----------------------------------------------------
-           STORE DATA STRUCTURE & DATA INITIALIZATION
-           ---------------------------------------------------- */
-        
-        // 30+ Complete Categories
         const CATEGORIES = [
             { id: 'mobile', name: 'الموبايل والتابلت', icon: 'fa-mobile-alt' },
             { id: 'makeup', name: 'المكياج', icon: 'fa-magic' },
@@ -762,7 +715,6 @@
             { id: 'device-acc', name: 'ملحقات الأجهزة', icon: 'fa-plug' }
         ];
 
-        // Comprehensive Mock Products Catalogue
         const PRODUCTS = [
             {
                 id: 1,
@@ -929,10 +881,9 @@
             }
         ];
 
-        // Global State Objects
         let appState = {
             cart: [],
-            wishlist: [2, 4], // Initial saved IDs
+            wishlist: [2, 4],
             orders: [
                 {
                     id: "VTO-98231",
@@ -973,14 +924,15 @@
         let currentActiveTab = 'home';
         let activeProductDetail = null;
 
-        // Page Initializer on DOM ready
+        let leafletMapInstance = null;
+        let leafletMarkerInstance = null;
+
         window.addEventListener('DOMContentLoaded', () => {
             loadFromLocalStorage();
             renderCategoriesGrid();
             renderHomeSections();
             updateCartBadges();
 
-            // Simulate splash loader hide
             setTimeout(() => {
                 const loader = document.getElementById('app-loader');
                 if (loader) {
@@ -990,7 +942,6 @@
             }, 600);
         });
 
-        // Save State to LocalStorage
         function saveStateToStorage() {
             localStorage.setItem('vitto_app_state', JSON.stringify({
                 cart: appState.cart,
@@ -1001,7 +952,6 @@
             }));
         }
 
-        // Load State from LocalStorage
         function loadFromLocalStorage() {
             const saved = localStorage.getItem('vitto_app_state');
             if (saved) {
@@ -1019,7 +969,6 @@
             updateProfileUIDisplay();
         }
 
-        // Toast Messages helper
         function showToast(text, iconClass = "fa-check-circle") {
             const toast = document.getElementById('toast-msg');
             const toastText = document.getElementById('toast-text');
@@ -1037,22 +986,16 @@
             }, 2500);
         }
 
-        // Price Formatter (SYP - ل.س)
         function formatPrice(amount) {
             return amount.toLocaleString('ar-SY') + ' ل.س';
         }
 
-        /* ----------------------------------------------------
-           NAVIGATION & VIEW SWITCHING LOGIC
-           ---------------------------------------------------- */
         function switchTab(tabId) {
             currentActiveTab = tabId;
             appState.navigationHistory = [tabId];
 
-            // Hide all views
             document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
 
-            // Reset Top Header Controls
             const headerSearch = document.getElementById('header-search-box');
             const headerTitle = document.getElementById('header-title');
             const backBtn = document.getElementById('header-back-btn');
@@ -1061,7 +1004,6 @@
             backBtn.classList.add('hidden');
             brandLogo.classList.remove('hidden');
 
-            // Update Tab Button Highlights
             ['home', 'categories', 'cart', 'account'].forEach(t => {
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if (btn) {
@@ -1073,7 +1015,6 @@
                 }
             });
 
-            // Show Selected Tab
             const targetView = document.getElementById(`page-${tabId}`);
             if (targetView) targetView.classList.remove('hidden');
 
@@ -1082,7 +1023,7 @@
                 headerTitle.classList.add('hidden');
             } else if (tabId === 'categories') {
                 headerSearch.classList.add('hidden');
-                headerTitle.innerText = 'جميع الفئات الأقسام';
+                headerTitle.innerText = 'جميع الفئات والأقسام';
                 headerTitle.classList.remove('hidden');
             } else if (tabId === 'cart') {
                 headerSearch.classList.add('hidden');
@@ -1098,7 +1039,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function openSubPage(pageId, title = '') {
+        function openSubPage(pageId) {
             appState.navigationHistory.push(pageId);
 
             document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
@@ -1114,7 +1055,6 @@
             const targetView = document.getElementById(`page-${pageId}`);
             if (targetView) targetView.classList.remove('hidden');
 
-            // Setup titles & data per subpage
             if (pageId === 'edit-profile') {
                 headerTitle.innerText = 'تعديل البيانات الشخصية';
                 populateProfileForm();
@@ -1151,11 +1091,7 @@
             }
         }
 
-        /* ----------------------------------------------------
-           RENDER HOME & CATEGORIES CONTENT
-           ---------------------------------------------------- */
         function renderHomeSections() {
-            // Home categories slider
             const homeCats = CATEGORIES.slice(0, 8);
             const catSlider = document.getElementById('home-categories-list');
             if (catSlider) {
@@ -1169,21 +1105,18 @@
                 `).join('');
             }
 
-            // Flash Deals Grid
             const flashItems = PRODUCTS.filter(p => p.isFlash);
             const flashGrid = document.getElementById('flash-deals-grid');
             if (flashGrid) {
                 flashGrid.innerHTML = flashItems.map(p => generateProductCardHTML(p)).join('');
             }
 
-            // New Arrivals Grid
             const newItems = PRODUCTS.filter(p => p.isNew);
             const newGrid = document.getElementById('new-arrivals-grid');
             if (newGrid) {
                 newGrid.innerHTML = newItems.map(p => generateProductCardHTML(p)).join('');
             }
 
-            // Best Sellers Grid
             const bestItems = PRODUCTS.filter(p => p.isBest);
             const bestGrid = document.getElementById('best-sellers-grid');
             if (bestGrid) {
@@ -1226,7 +1159,6 @@
             openSubPage('category-products');
         }
 
-        // Product Card Component Generator
         function generateProductCardHTML(p) {
             const isFav = appState.wishlist.includes(p.id);
             return `
@@ -1266,9 +1198,6 @@
             `;
         }
 
-        /* ----------------------------------------------------
-           PRODUCT DETAIL SUB-PAGE VIEW
-           ---------------------------------------------------- */
         function openProductDetail(productId) {
             const product = PRODUCTS.find(p => p.id === productId);
             if (!product) return;
@@ -1278,29 +1207,25 @@
             const isFav = appState.wishlist.includes(product.id);
 
             container.innerHTML = `
-                <!-- Main Image Slider Preview -->
                 <div class="relative bg-white border-b border-gray-100 pb-3">
                     <img id="pd-main-img" src="${product.images[0]}" class="w-full aspect-square object-cover">
                     <button onclick="toggleWishlist(${product.id}, event)" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center ${isFav ? 'text-rose-500' : 'text-gray-400'} text-lg">
                         <i class="${isFav ? 'fas' : 'far'} fa-heart"></i>
                     </button>
 
-                    <!-- Thumbnail Selectors -->
                     <div class="flex justify-center space-x-2 space-x-reverse mt-3 px-4">
-                        ${product.images.map((img, idx) => `
+                        ${product.images.map((img) => `
                             <img onclick="changePdImage('${img}')" src="${img}" class="w-12 h-12 rounded-lg border-2 border-orange-200 cursor-pointer object-cover">
                         `).join('')}
                     </div>
                 </div>
 
                 <div class="px-4 space-y-4">
-                    <!-- Preparation Time Badge -->
                     <div class="bg-orange-50 border border-orange-200 text-vitto-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 space-x-reverse">
                         <i class="fas fa-clock text-vitto-500"></i>
                         <span>${product.badge}</span>
                     </div>
 
-                    <!-- Title & Stock Status -->
                     <div>
                         <span class="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-md mb-1">
                             ${product.stock ? 'متوفر في المتجر' : 'غير متوفر'}
@@ -1308,7 +1233,6 @@
                         <h2 class="text-base font-black text-gray-900 leading-snug">${product.name}</h2>
                     </div>
 
-                    <!-- Price Box -->
                     <div class="flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
                         <div>
                             <div class="text-lg font-black text-vitto-500">${formatPrice(product.price)}</div>
@@ -1317,7 +1241,6 @@
                         ${product.discount ? `<span class="bg-red-500 text-white text-xs font-black px-2.5 py-1 rounded-xl dir-ltr">${product.discount} خصم</span>` : ''}
                     </div>
 
-                    <!-- Color Pickers -->
                     ${product.colors && product.colors.length > 0 ? `
                         <div class="space-y-1.5">
                             <label class="block text-xs font-bold text-gray-700">اختر اللون:</label>
@@ -1329,7 +1252,6 @@
                         </div>
                     ` : ''}
 
-                    <!-- Quantity Control & Add To Cart Bar -->
                     <div class="flex items-center space-x-3 space-x-reverse bg-white p-3 rounded-2xl border border-gray-100 shadow-sm">
                         <div class="flex items-center bg-gray-100 rounded-xl px-2 py-1">
                             <button onclick="changeQty(-1)" class="w-8 h-8 text-gray-700 font-bold text-base flex items-center justify-center">-</button>
@@ -1342,20 +1264,17 @@
                         </button>
                     </div>
 
-                    <!-- Description Section -->
                     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-2">
                         <h3 class="font-extrabold text-xs text-gray-800 border-b border-gray-100 pb-2">تفاصيل ومواصفات المنتج</h3>
                         <p class="text-xs text-gray-600 leading-relaxed">${product.description}</p>
                     </div>
 
-                    <!-- User Reviews Section -->
                     <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
                         <div class="flex justify-between items-center">
                             <h3 class="font-extrabold text-xs text-gray-800">تقييمات وآراء العملاء</h3>
                             <span class="text-xs font-bold text-amber-500"><i class="fas fa-star me-1"></i>${product.rating} من 5</span>
                         </div>
 
-                        <!-- Sample Comments -->
                         <div class="space-y-2 pt-1">
                             <div class="bg-gray-50 p-2.5 rounded-xl text-xs space-y-1">
                                 <div class="flex justify-between font-bold text-gray-800">
@@ -1366,7 +1285,6 @@
                             </div>
                         </div>
 
-                        <!-- Add Review Box -->
                         <form onsubmit="addNewReview(event)" class="space-y-2 pt-2 border-t border-gray-100">
                             <label class="block text-xs font-bold text-gray-700">أضف رأيك أو تعليقك على المنتج</label>
                             <textarea id="review-comment-input" required rows="2" placeholder="اكتب تجريتك مع المنتج هنا..." class="w-full text-xs p-2 rounded-xl border border-gray-200 focus:outline-none focus:border-vitto-500"></textarea>
@@ -1376,7 +1294,7 @@
                 </div>
             `;
 
-            openSubPage('product-detail', product.name);
+            openSubPage('product-detail');
         }
 
         function changePdImage(src) {
@@ -1407,14 +1325,11 @@
             e.preventDefault();
             const input = document.getElementById('review-comment-input');
             if (input && input.value.trim()) {
-                showToast("شكراً لك! تم إرسال تعليقك وسيطهر بعد المراجعة");
+                showToast("شكراً لك! تم إرسال تعليقك وسيظهر بعد المراجعة");
                 input.value = "";
             }
         }
 
-        /* ----------------------------------------------------
-           CART & MULTI-STEP CHECKOUT LOGIC
-           ---------------------------------------------------- */
         function addToCart(productId, qty = 1, event = null) {
             if (event) event.stopPropagation();
 
@@ -1439,12 +1354,10 @@
         }
 
         function renderCartStep(stepNum) {
-            // Hide all cart steps
             document.getElementById('cart-step-1').classList.add('hidden');
             document.getElementById('cart-step-2').classList.add('hidden');
             document.getElementById('cart-step-3').classList.add('hidden');
 
-            // Update Stepper UI
             [1, 2, 3].forEach(s => {
                 const dot = document.getElementById(`step-dot-${s}`);
                 if (dot) {
@@ -1650,17 +1563,14 @@
             };
 
             appState.orders.unshift(newOrder);
-            appState.cart = []; // Reset Cart
+            appState.cart = [];
             saveStateToStorage();
             updateCartBadges();
 
-            showToast("تم تسجيل وطلبك بنجاح! شكرًا لتسوقك من فيتو 🛍️");
+            showToast("تم تسجيل طلبك بنجاح! شكرًا لتسوقك من فيتو 🛍️");
             openSubPage('orders');
         }
 
-        /* ----------------------------------------------------
-           ACCOUNT & SUB-PAGES MANAGEMENT LOGIC
-           ---------------------------------------------------- */
         function updateProfileUIDisplay() {
             const nameEl = document.getElementById('account-user-fullname');
             const phoneEl = document.getElementById('account-user-phone');
@@ -1730,7 +1640,7 @@
                                     <img src="${item.img}" class="w-10 h-10 rounded-lg object-cover">
                                     <div class="flex-1">
                                         <h5 class="font-bold text-gray-800 line-clamp-1">${item.name}</h5>
-                                        <span class="text-[10px] text-gray-500">الكمية: ${item.qty} × ${formatPrice(item.price)}</span>
+                                        <span class="text-[10px] text-gray-500">الكمية: ${item.qty} ×${formatPrice(item.price)}</span>
                                     </div>
                                 </div>
                             `).join('')}
@@ -1774,12 +1684,19 @@
             `).join('');
         }
 
+        /* ----------------------------------------------------
+           REAL LEAFLET MAP MODAL LOGIC
+           ---------------------------------------------------- */
         function openAddressModal() {
             const modal = document.getElementById('address-modal');
             if (modal) {
                 modal.classList.remove('opacity-0', 'pointer-events-none');
                 modal.querySelector('div').classList.remove('scale-95');
                 modal.querySelector('div').classList.add('scale-100');
+
+                setTimeout(() => {
+                    initLeafletModalMap();
+                }, 250);
             }
         }
 
@@ -1789,6 +1706,63 @@
                 modal.classList.add('opacity-0', 'pointer-events-none');
                 modal.querySelector('div').classList.remove('scale-100');
                 modal.querySelector('div').classList.add('scale-95');
+            }
+        }
+
+        function initLeafletModalMap() {
+            const defaultLat = 33.5138;
+            const defaultLng = 36.2765;
+
+            if (!leafletMapInstance) {
+                leafletMapInstance = L.map('leaflet-modal-map').setView([defaultLat, defaultLng], 14);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(leafletMapInstance);
+
+                leafletMarkerInstance = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(leafletMapInstance);
+
+                leafletMarkerInstance.on('dragend', (e) => {
+                    const pos = leafletMarkerInstance.getLatLng();
+                    updateCoordsDetails(pos.lat, pos.lng);
+                });
+
+                leafletMapInstance.on('click', (e) => {
+                    leafletMarkerInstance.setLatLng(e.latlng);
+                    updateCoordsDetails(e.latlng.lat, e.latlng.lng);
+                });
+            } else {
+                leafletMapInstance.invalidateSize();
+            }
+        }
+
+        function updateCoordsDetails(lat, lng) {
+            const detailsInput = document.getElementById('addr-details');
+            if (detailsInput) {
+                detailsInput.value = `إحداثيات GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+            }
+        }
+
+        function getRealGPSLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        if (leafletMapInstance && leafletMarkerInstance) {
+                            leafletMapInstance.setView([lat, lng], 16);
+                            leafletMarkerInstance.setLatLng([lat, lng]);
+                            updateCoordsDetails(lat, lng);
+                            showToast("تم تحديد موقعك بدقة عبر الـ GPS بنجاح ✅");
+                        }
+                    },
+                    (error) => {
+                        showToast("تعذر تحديد الموقع تلقائياً. يرجى النقر يدوياً على الخريطة.", "fa-exclamation-circle");
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                showToast("متصفحك لا يدعم خاصية تحديد الموقع الجغرافي.", "fa-exclamation-circle");
             }
         }
 
@@ -1808,7 +1782,7 @@
             closeAddressModal();
             renderAddressesList();
             renderCartStep2();
-            showToast("تم إضافه العنوان الجديد بنجاح");
+            showToast("تم إضافة العنوان الجديد بنجاح");
         }
 
         function removeAddress(id) {
@@ -1828,12 +1802,11 @@
                 showToast("تم إزالة المنتج من المفضلة");
             } else {
                 appState.wishlist.push(productId);
-                showToast("تم إضافه المنتج إلى المفضلة ❤️");
+                showToast("تم إضافة المنتج إلى المفضلة ❤️");
             }
 
             saveStateToStorage();
 
-            // Re-render current page cards if applicable
             if (currentActiveTab === 'home') renderHomeSections();
             if (currentActiveTab === 'categories') renderCategoriesGrid();
             if (document.getElementById('page-wishlist') && !document.getElementById('page-wishlist').classList.contains('hidden')) {
@@ -1889,7 +1862,7 @@
                     <p>يلتزم متجر فيتو بحماية خصوصية بيانات المستخدمين بكافة أشكالها:</p>
                     <ul class="list-disc pr-4 space-y-1">
                         <li>نحن نستخدم بيانات العنوان ورقم الهاتف لتسليم الطلبات والتواصل فقط.</li>
-                        <li>لا يتم مشاركة أي معلوات شخصية مع طرف ثالث لأغراض إعلانية.</li>
+                        <li>لا يتم مشاركة أي معلومات شخصية مع طرف ثالث لأغراض إعلانية.</li>
                         <li>كافة عمليات وتفاصيل المشتريات مشفرة وتتم بأعلى معايير الأمان.</li>
                     </ul>
                 `;
@@ -1899,35 +1872,52 @@
         }
 
         /* ----------------------------------------------------
-           DYNAMIC SEARCH HANDLER
+           FIXED SEARCH HANDLER (DROPDOWN SUGGESTIONS)
            ---------------------------------------------------- */
         function handleSearch(query) {
             const term = query.trim().toLowerCase();
+            const dropdown = document.getElementById('search-suggestions-dropdown');
+            if (!dropdown) return;
+
             if (term.length === 0) {
-                if (currentActiveTab === 'home') switchTab('home');
+                dropdown.classList.add('hidden');
+                dropdown.innerHTML = '';
                 return;
             }
 
             const matches = PRODUCTS.filter(p => p.name.toLowerCase().includes(term) || p.description.toLowerCase().includes(term));
             
-            const grid = document.getElementById('category-products-grid');
-            const titleEl = document.getElementById('current-category-title');
-            const countEl = document.getElementById('category-products-count');
-
-            if (titleEl) titleEl.innerText = `نتائج البحث عن: "${query}"`;
-            if (countEl) countEl.innerText = `${matches.length} نتيجة`;
-
-            if (grid) {
-                if (matches.length === 0) {
-                    grid.innerHTML = `<div class="col-span-2 text-center py-10 text-gray-400 text-xs">لا توجد منتجات تطابق كلمة البحث الحالية</div>`;
-                } else {
-                    grid.innerHTML = matches.map(p => generateProductCardHTML(p)).join('');
-                }
+            if (matches.length === 0) {
+                dropdown.innerHTML = `<div class="p-3 text-center text-gray-400 text-xs">لا توجد منتجات مطابقة لـ "${query}"</div>`;
+            } else {
+                dropdown.innerHTML = matches.map(p => `
+                    <div onclick="selectSearchProduct(${p.id})" class="flex items-center space-x-2 space-x-reverse p-2.5 hover:bg-orange-50 cursor-pointer border-b border-gray-50 text-xs">
+                        <img src="${p.images[0]}" class="w-8 h-8 rounded-lg object-cover">
+                        <div class="flex-1 truncate">
+                            <h5 class="font-bold text-gray-800 truncate">${p.name}</h5>
+                            <span class="text-vitto-500 font-bold">${formatPrice(p.price)}</span>
+                        </div>
+                    </div>
+                `).join('');
             }
-
-            openSubPage('category-products');
+            dropdown.classList.remove('hidden');
         }
+
+        function selectSearchProduct(productId) {
+            const dropdown = document.getElementById('search-suggestions-dropdown');
+            if (dropdown) dropdown.classList.add('hidden');
+            document.getElementById('global-search-input').value = '';
+            openProductDetail(productId);
+        }
+
+        // إغلاق القائمة المنسدلة عند النقر في أي مكان خارجها
+        document.addEventListener('click', (e) => {
+            const searchBox = document.getElementById('header-search-box');
+            const dropdown = document.getElementById('search-suggestions-dropdown');
+            if (searchBox && dropdown && !searchBox.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
-```
